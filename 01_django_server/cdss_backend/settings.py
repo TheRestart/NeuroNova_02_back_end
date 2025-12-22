@@ -42,6 +42,8 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "corsheaders",
     "emr",
+    "ris",  # UC05 - Radiology Information System
+    "ai",   # UC06 - AI Queue Integration
 ]
 
 MIDDLEWARE = [
@@ -127,3 +129,24 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# ============================================
+# CDSS Custom Settings
+# ============================================
+
+# Security Toggle (개발/프로덕션 모드)
+ENABLE_SECURITY = False  # True로 설정 시 모든 권한 체크 활성화
+
+# Orthanc PACS 설정
+ORTHANC_API_URL = 'http://localhost:8042'
+ORTHANC_USERNAME = 'orthanc'
+ORTHANC_PASSWORD = 'orthanc123'
+
+# RabbitMQ 설정
+RABBITMQ_HOST = 'localhost'
+RABBITMQ_PORT = 5672
+RABBITMQ_USER = 'guest'
+RABBITMQ_PASSWORD = 'guest'
+
+# AI Server 설정 (추후 Flask AI Server 통합 시 사용)
+AI_SERVER_URL = 'http://localhost:5000'

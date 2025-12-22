@@ -9,4 +9,6 @@ urlpatterns = [
     path('patients/', views.list_patients, name='list_patients'),
     path('patients/search/', views.search_patients, name='search_patients'),
     path('patients/<str:patient_id>/', views.get_patient, name='get_patient'),
+    path('patients/create/', views.PatientCreateView.as_view(), name='create_patient'),
+    path('orders/create/', views.OrderCreateView.as_view(), name='create_order'),
 ]

@@ -2,8 +2,12 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 import os
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
 from .openemr_client import OpenEMRClient
-
+from .serializers import PatientCreateSerializer, OrderCreateSerializer, PatientCacheSerializer, OrderSerializer
+from .services import PatientService, OrderService
 
 # OpenEMR 클라이언트 인스턴스
 openemr_url = os.getenv('OPENEMR_BASE_URL', 'http://localhost:80')
@@ -60,3 +64,40 @@ def get_patient(request, patient_id):
         return JsonResponse({
             "error": "Patient not found"
         }, status=404)
+
+
+class PatientCreateView(APIView):
+    """
+    환자 생성 Controller
+    - DTO 검증 (Serializer)
+    - Service 호출 (Business Logic)
+    """
+    def post(self, request):
+        serializer = PatientCreateSerializer(data=request.data)
+        if serializer.is_valid():
+            patient = PatientService.create_patient(serializer.validated_data)
+            # 응답용 Serializer로 변환
+            response_serializer = PatientCacheSerializer(patient)
+            return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class OrderCreateView(APIView):
+    """
+    처방 생성 Controller
+    - DTO 검증 (Serializer)
+    - Service 호출 (Business Logic)
+    """
+    def post(self, request):
+        serializer = OrderCreateSerializer(data=request.data)
+        if serializer.is_valid():
+            order_data = serializer.validated_data
+            # order_items 분리
+            items_data = order_data.pop('order_items', [])
+            
+            order = OrderService.create_order(order_data, items_data)
+            
+            # 응답용 Serializer로 변환
+            response_serializer = OrderSerializer(order)
+            return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

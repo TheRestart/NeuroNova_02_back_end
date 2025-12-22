@@ -6,7 +6,7 @@ Django REST Framework용 시리얼라이저
 
 from rest_framework import serializers
 from .models import PatientCache, Encounter, Order, OrderItem
-from datetime import datetime
+from .models import PatientCache, Encounter, Order, OrderItem
 
 
 class PatientCacheSerializer(serializers.ModelSerializer):
@@ -35,23 +35,12 @@ class PatientCreateSerializer(serializers.ModelSerializer):
             'phone', 'email', 'address', 'emergency_contact', 'allergies', 'blood_type'
         ]
 
-    def create(self, validated_data):
-        # 자동으로 patient_id 생성 (P-YYYY-NNNNNN)
-        year = datetime.now().year
-        last_patient = PatientCache.objects.filter(
-            patient_id__startswith=f'P-{year}-'
-        ).order_by('-patient_id').first()
-
-        if last_patient:
-            last_number = int(last_patient.patient_id.split('-')[-1])
-            new_number = last_number + 1
-        else:
-            new_number = 1
-
-        patient_id = f'P-{year}-{new_number:06d}'
-        validated_data['patient_id'] = patient_id
-
-        return super().create(validated_data)
+    class Meta:
+        model = PatientCache
+        fields = [
+            'family_name', 'given_name', 'birth_date', 'gender',
+            'phone', 'email', 'address', 'emergency_contact', 'allergies', 'blood_type'
+        ]
 
 
 class EncounterSerializer(serializers.ModelSerializer):
@@ -81,23 +70,12 @@ class EncounterCreateSerializer(serializers.ModelSerializer):
             'chief_complaint', 'diagnosis', 'status', 'encounter_date'
         ]
 
-    def create(self, validated_data):
-        # 자동으로 encounter_id 생성 (E-YYYY-NNNNNN)
-        year = datetime.now().year
-        last_encounter = Encounter.objects.filter(
-            encounter_id__startswith=f'E-{year}-'
-        ).order_by('-encounter_id').first()
-
-        if last_encounter:
-            last_number = int(last_encounter.encounter_id.split('-')[-1])
-            new_number = last_number + 1
-        else:
-            new_number = 1
-
-        encounter_id = f'E-{year}-{new_number:06d}'
-        validated_data['encounter_id'] = encounter_id
-
-        return super().create(validated_data)
+    class Meta:
+        model = Encounter
+        fields = [
+            'patient', 'doctor_id', 'encounter_type', 'department',
+            'chief_complaint', 'diagnosis', 'status', 'encounter_date'
+        ]
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
@@ -145,35 +123,9 @@ class OrderCreateSerializer(serializers.ModelSerializer):
             'urgency', 'status', 'notes', 'order_items'
         ]
 
-    def create(self, validated_data):
-        # order_items 추출
-        order_items_data = validated_data.pop('order_items', [])
-
-        # 자동으로 order_id 생성 (O-YYYY-NNNNNN)
-        year = datetime.now().year
-        last_order = Order.objects.filter(
-            order_id__startswith=f'O-{year}-'
-        ).order_by('-order_id').first()
-
-        if last_order:
-            last_number = int(last_order.order_id.split('-')[-1])
-            new_number = last_number + 1
-        else:
-            new_number = 1
-
-        order_id = f'O-{year}-{new_number:06d}'
-        validated_data['order_id'] = order_id
-
-        # Order 생성
-        order = super().create(validated_data)
-
-        # OrderItem 생성
-        for idx, item_data in enumerate(order_items_data, 1):
-            item_id = f'OI-{order_id}-{idx:03d}'
-            OrderItem.objects.create(
-                item_id=item_id,
-                order=order,
-                **item_data
-            )
-
-        return order
+    class Meta:
+        model = Order
+        fields = [
+            'patient', 'encounter', 'ordered_by', 'order_type',
+            'urgency', 'status', 'notes', 'order_items'
+        ]

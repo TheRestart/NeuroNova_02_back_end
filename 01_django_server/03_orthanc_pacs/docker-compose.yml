@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  orthanc:
+    image: orthancteam/orthanc:latest
+    container_name: cdss-orthanc
+    ports:
+      - "8042:8042"  # HTTP UI & REST API
+      - "4242:4242"  # DICOM protocol
+    environment:
+      - ORTHANC_USERNAME=orthanc
+      - ORTHANC_PASSWORD=orthanc123
+      - ORTHANC_AUTHENTICATION_ENABLED=true
+      - ORTHANC_NAME=CDSS Orthanc Server
+    volumes:
+      - orthanc-data:/var/lib/orthanc/db
+    restart: unless-stopped
+    networks:
+      - cdss-network
+
+volumes:
+  orthanc-data:
+
+networks:
+  cdss-network:
+    driver: bridge
