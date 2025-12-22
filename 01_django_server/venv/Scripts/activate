@@ -41,12 +41,12 @@ case "$(uname)" in
     CYGWIN*|MSYS*|MINGW*)
         # transform D:\path\to\venv to /d/path/to/venv on MSYS and MINGW
         # and to /cygdrive/d/path/to/venv on Cygwin
-        VIRTUAL_ENV=$(cygpath 'C:\Users\302-28\Downloads\UML\cdss-backend\venv')
+        VIRTUAL_ENV=$(cygpath 'D:\1222\NeuroNova_v1\NeuroNova_02_back_end\01_django_server\venv')
         export VIRTUAL_ENV
         ;;
     *)
         # use the path as-is
-        export VIRTUAL_ENV='C:\Users\302-28\Downloads\UML\cdss-backend\venv'
+        export VIRTUAL_ENV='D:\1222\NeuroNova_v1\NeuroNova_02_back_end\01_django_server\venv'
         ;;
 esac
 

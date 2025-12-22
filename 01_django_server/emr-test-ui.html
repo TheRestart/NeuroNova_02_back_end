@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenEMR 연동 테스트 UI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .test-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .test-section h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        input[type="text"], input[type="number"] {
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+        input[type="text"]:focus, input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .response-box {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .success {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .error {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-online {
+            background-color: #28a745;
+            box-shadow: 0 0 10px #28a745;
+        }
+        .status-offline {
+            background-color: #dc3545;
+            box-shadow: 0 0 10px #dc3545;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            color: #667eea;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .loading.active {
+            display: block;
+        }
+        .patient-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            transition: all 0.3s ease;
+        }
+        .patient-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.2);
+        }
+        .patient-id {
+            color: #667eea;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .patient-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        .patient-info {
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏥 OpenEMR 연동 테스트 UI</h1>
+
+        <!-- 서버 상태 확인 -->
+        <div class="test-section">
+            <h2>1. 서버 상태 확인</h2>
+            <div class="button-group">
+                <button onclick="checkHealth()">Health Check</button>
+            </div>
+            <div class="loading" id="loading-health">로딩 중...</div>
+            <div class="response-box" id="response-health">
+                <span style="color: #999;">아직 테스트하지 않았습니다.</span>
+            </div>
+        </div>
+
+        <!-- 인증 테스트 -->
+        <div class="test-section">
+            <h2>2. OpenEMR 인증</h2>
+            <div class="button-group">
+                <button onclick="authenticate()">인증 요청</button>
+            </div>
+            <div class="loading" id="loading-auth">로딩 중...</div>
+            <div class="response-box" id="response-auth">
+                <span style="color: #999;">아직 테스트하지 않았습니다.</span>
+            </div>
+        </div>
+
+        <!-- 환자 목록 조회 -->
+        <div class="test-section">
+            <h2>3. 환자 목록 조회</h2>
+            <div class="button-group">
+                <label>조회 개수: </label>
+                <input type="number" id="patient-limit" value="10" min="1" max="100" style="width: 80px;">
+                <button onclick="listPatients()">환자 목록 조회</button>
+            </div>
+            <div class="loading" id="loading-patients">로딩 중...</div>
+            <div class="response-box" id="response-patients">
+                <span style="color: #999;">아직 테스트하지 않았습니다.</span>
+            </div>
+        </div>
+
+        <!-- 환자 검색 -->
+        <div class="test-section">
+            <h2>4. 환자 검색</h2>
+            <div class="button-group">
+                <label>이름(Given): </label>
+                <input type="text" id="search-given" placeholder="예: John" style="width: 150px;">
+                <label>성(Family): </label>
+                <input type="text" id="search-family" placeholder="예: Doe" style="width: 150px;">
+                <button onclick="searchPatients()">검색</button>
+            </div>
+            <div class="loading" id="loading-search">로딩 중...</div>
+            <div class="response-box" id="response-search">
+                <span style="color: #999;">아직 테스트하지 않았습니다.</span>
+            </div>
+        </div>
+
+        <!-- 특정 환자 조회 -->
+        <div class="test-section">
+            <h2>5. 특정 환자 조회</h2>
+            <div class="button-group">
+                <label>환자 ID: </label>
+                <input type="text" id="patient-id" placeholder="예: 1" style="width: 150px;">
+                <button onclick="getPatient()">조회</button>
+            </div>
+            <div class="loading" id="loading-patient">로딩 중...</div>
+            <div class="response-box" id="response-patient">
+                <span style="color: #999;">아직 테스트하지 않았습니다.</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8000/api/emr';
+
+        function showLoading(id) {
+            document.getElementById(`loading-${id}`).classList.add('active');
+        }
+
+        function hideLoading(id) {
+            document.getElementById(`loading-${id}`).classList.remove('active');
+        }
+
+        function displayResponse(elementId, data, isError = false) {
+            const element = document.getElementById(elementId);
+            if (isError) {
+                element.innerHTML = `<span class="error">❌ 오류 발생:</span>\n${JSON.stringify(data, null, 2)}`;
+            } else {
+                element.innerHTML = `<span class="success">✅ 성공:</span>\n${JSON.stringify(data, null, 2)}`;
+            }
+        }
+
+        function displayPatients(elementId, patients) {
+            const element = document.getElementById(elementId);
+            if (!patients || patients.length === 0) {
+                element.innerHTML = '<span style="color: #999;">조회된 환자가 없습니다.</span>';
+                return;
+            }
+
+            let html = `<span class="success">✅ ${patients.length}명의 환자를 찾았습니다:</span>\n\n`;
+            patients.forEach(patient => {
+                html += `<div class="patient-card">`;
+                html += `  <div class="patient-id">ID: ${patient.id || 'N/A'}</div>`;
+                html += `  <div class="patient-name">${patient.name || 'N/A'}</div>`;
+                html += `  <div class="patient-info">생년월일: ${patient.birthDate || 'N/A'}</div>`;
+                html += `  <div class="patient-info">성별: ${patient.gender || 'N/A'}</div>`;
+                if (patient.telecom && patient.telecom.length > 0) {
+                    html += `  <div class="patient-info">연락처: ${patient.telecom.map(t => t.value).join(', ')}</div>`;
+                }
+                if (patient.address && patient.address.length > 0) {
+                    html += `  <div class="patient-info">주소: ${patient.address.map(a => a.text).join(', ')}</div>`;
+                }
+                html += `</div>`;
+            });
+            element.innerHTML = html;
+        }
+
+        async function checkHealth() {
+            showLoading('health');
+            try {
+                const response = await fetch(`${API_BASE_URL}/health/`);
+                const data = await response.json();
+                displayResponse('response-health', data, !response.ok);
+            } catch (error) {
+                displayResponse('response-health', {error: error.message}, true);
+            } finally {
+                hideLoading('health');
+            }
+        }
+
+        async function authenticate() {
+            showLoading('auth');
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: 'admin',
+                        password: 'pass'
+                    })
+                });
+                const data = await response.json();
+                displayResponse('response-auth', data, !response.ok);
+            } catch (error) {
+                displayResponse('response-auth', {error: error.message}, true);
+            } finally {
+                hideLoading('auth');
+            }
+        }
+
+        async function listPatients() {
+            showLoading('patients');
+            try {
+                const limit = document.getElementById('patient-limit').value;
+                const response = await fetch(`${API_BASE_URL}/patients/?limit=${limit}`);
+                const data = await response.json();
+
+                if (response.ok && data.patients) {
+                    displayPatients('response-patients', data.patients);
+                } else {
+                    displayResponse('response-patients', data, true);
+                }
+            } catch (error) {
+                displayResponse('response-patients', {error: error.message}, true);
+            } finally {
+                hideLoading('patients');
+            }
+        }
+
+        async function searchPatients() {
+            showLoading('search');
+            try {
+                const given = document.getElementById('search-given').value;
+                const family = document.getElementById('search-family').value;
+
+                let url = `${API_BASE_URL}/patients/search/?`;
+                if (given) url += `given=${encodeURIComponent(given)}&`;
+                if (family) url += `family=${encodeURIComponent(family)}`;
+
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (response.ok && data.patients) {
+                    displayPatients('response-search', data.patients);
+                } else {
+                    displayResponse('response-search', data, true);
+                }
+            } catch (error) {
+                displayResponse('response-search', {error: error.message}, true);
+            } finally {
+                hideLoading('search');
+            }
+        }
+
+        async function getPatient() {
+            showLoading('patient');
+            try {
+                const patientId = document.getElementById('patient-id').value;
+                if (!patientId) {
+                    displayResponse('response-patient', {error: '환자 ID를 입력해주세요.'}, true);
+                    return;
+                }
+
+                const response = await fetch(`${API_BASE_URL}/patients/${patientId}/`);
+                const data = await response.json();
+
+                if (response.ok && data.patient) {
+                    displayPatients('response-patient', [data.patient]);
+                } else {
+                    displayResponse('response-patient', data, true);
+                }
+            } catch (error) {
+                displayResponse('response-patient', {error: error.message}, true);
+            } finally {
+                hideLoading('patient');
+            }
+        }
+
+        // 페이지 로드 시 자동으로 헬스 체크
+        window.onload = function() {
+            checkHealth();
+        };
+    </script>
+</body>
+</html>

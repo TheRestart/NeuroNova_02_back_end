@@ -33,7 +33,7 @@ end
 # Unset irrelevant variables.
 deactivate nondestructive
 
-set -gx VIRTUAL_ENV 'C:\Users\302-28\Downloads\UML\cdss-backend\venv'
+set -gx VIRTUAL_ENV 'D:\1222\NeuroNova_v1\NeuroNova_02_back_end\01_django_server\venv'
 
 set -gx _OLD_VIRTUAL_PATH $PATH
 set -gx PATH "$VIRTUAL_ENV/"Scripts $PATH
