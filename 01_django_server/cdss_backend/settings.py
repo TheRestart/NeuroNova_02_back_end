@@ -11,24 +11,30 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
+import os
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load environment variables from .env file
+load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-1=zjw5#j^pb5k=d(ifwrp+016rjn3-#*t0^@6g**10tsv(zhah"
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-fallback-key-change-this')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = ['*']  # 개발 환경용
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
 
 # CORS 설정
-CORS_ALLOW_ALL_ORIGINS = True  # 개발 환경용
+CORS_ALLOW_ALL_ORIGINS = os.getenv('CORS_ALLOW_ALL_ORIGINS', 'True') == 'True'
+CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:3000').split(',') if not CORS_ALLOW_ALL_ORIGINS else []
 
 
 # Application definition
@@ -40,10 +46,14 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "rest_framework",
+    "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",
     "corsheaders",
-    "emr",
-    "ris",  # UC05 - Radiology Information System
-    "ai",   # UC06 - AI Queue Integration
+    "acct",  # UC01 - Authentication & Authorization
+    "emr",   # UC02 - EMR Proxy
+    "ris",   # UC05 - Radiology Information System
+    "ai",    # UC06 - AI Queue Integration
 ]
 
 MIDDLEWARE = [
@@ -55,6 +65,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "cdss_backend.middleware.ExceptionHandlerMiddleware",  # 전역 예외 처리
 ]
 
 ROOT_URLCONF = "cdss_backend.urls"
@@ -82,9 +93,28 @@ WSGI_APPLICATION = "cdss_backend.wsgi.application"
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+    'default': {
+        'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.mysql'),
+        'NAME': os.getenv('DB_NAME', 'cdss_db'),
+        'USER': os.getenv('DB_USER', 'cdss_user'),
+        'PASSWORD': os.getenv('DB_PASSWORD', 'cdss_password'),
+        'HOST': os.getenv('DB_HOST', 'localhost'),
+        'PORT': os.getenv('DB_PORT', '3306'),
+        'OPTIONS': {
+            'charset': 'utf8mb4',
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+        },
+    },
+    'openemr': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': os.getenv('OPENEMR_DB_NAME', 'openemr'),
+        'USER': os.getenv('OPENEMR_DB_USER', 'openemr_readonly'),
+        'PASSWORD': os.getenv('OPENEMR_DB_PASSWORD', 'openemr_password'),
+        'HOST': os.getenv('OPENEMR_DB_HOST', 'localhost'),
+        'PORT': os.getenv('OPENEMR_DB_PORT', '3307'),
+        'OPTIONS': {
+            'charset': 'utf8mb4',
+        },
     }
 }
 
@@ -134,19 +164,49 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # CDSS Custom Settings
 # ============================================
 
+# Custom User Model
+AUTH_USER_MODEL = 'acct.User'
+
 # Security Toggle (개발/프로덕션 모드)
-ENABLE_SECURITY = False  # True로 설정 시 모든 권한 체크 활성화
+ENABLE_SECURITY = os.getenv('ENABLE_SECURITY', 'False') == 'True'
+
+# JWT 설정
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=int(os.getenv('JWT_ACCESS_TOKEN_HOURS', '1'))),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=int(os.getenv('JWT_REFRESH_TOKEN_DAYS', '7'))),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'USER_ID_FIELD': 'user_id',
+    'USER_ID_CLAIM': 'user_id',
+}
+
+# Django REST Framework 설정
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ] if ENABLE_SECURITY else [
+        'rest_framework.permissions.AllowAny',
+    ],
+}
 
 # Orthanc PACS 설정
-ORTHANC_API_URL = 'http://localhost:8042'
-ORTHANC_USERNAME = 'orthanc'
-ORTHANC_PASSWORD = 'orthanc123'
+ORTHANC_API_URL = os.getenv('ORTHANC_API_URL', 'http://localhost:8042')
+ORTHANC_USERNAME = os.getenv('ORTHANC_USERNAME', 'orthanc')
+ORTHANC_PASSWORD = os.getenv('ORTHANC_PASSWORD', 'orthanc123')
 
 # RabbitMQ 설정
-RABBITMQ_HOST = 'localhost'
-RABBITMQ_PORT = 5672
-RABBITMQ_USER = 'guest'
-RABBITMQ_PASSWORD = 'guest'
+RABBITMQ_HOST = os.getenv('RABBITMQ_HOST', 'localhost')
+RABBITMQ_PORT = int(os.getenv('RABBITMQ_PORT', '5672'))
+RABBITMQ_USER = os.getenv('RABBITMQ_USER', 'guest')
+RABBITMQ_PASSWORD = os.getenv('RABBITMQ_PASSWORD', 'guest')
 
 # AI Server 설정 (추후 Flask AI Server 통합 시 사용)
-AI_SERVER_URL = 'http://localhost:5000'
+AI_SERVER_URL = os.getenv('AI_SERVER_URL', 'http://localhost:5000')

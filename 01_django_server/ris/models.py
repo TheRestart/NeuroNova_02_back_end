@@ -1,6 +1,6 @@
 import uuid
 from django.db import models
-from django.contrib.auth.models import User
+from django.conf import settings
 
 
 class RadiologyOrder(models.Model):
@@ -23,7 +23,7 @@ class RadiologyOrder(models.Model):
     
     order_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     patient_id = models.CharField(max_length=100, help_text="OpenEMR patient ID")
-    ordered_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='radiology_orders')
+    ordered_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='radiology_orders')
     modality = models.CharField(max_length=10, choices=MODALITY_CHOICES)
     body_part = models.CharField(max_length=100)
     clinical_info = models.TextField(blank=True, help_text="임상 정보 및 검사 목적")
@@ -91,7 +91,7 @@ class RadiologyReport(models.Model):
     
     report_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     study = models.OneToOneField(RadiologyStudy, on_delete=models.CASCADE, related_name='report')
-    radiologist = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='radiology_reports')
+    radiologist = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='radiology_reports')
     
     findings = models.TextField(help_text="판독 소견")
     impression = models.TextField(help_text="판독 결론")
@@ -99,7 +99,7 @@ class RadiologyReport(models.Model):
     
     # 서명
     signed_at = models.DateTimeField(null=True, blank=True)
-    signed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='signed_reports')
+    signed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='signed_reports')
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

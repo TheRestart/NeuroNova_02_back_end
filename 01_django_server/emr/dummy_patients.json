@@ -1,0 +1,512 @@
+[
+  {
+    "patient_id": "P-2025-001",
+    "family_name": "김",
+    "given_name": "민수",
+    "birth_date": "1985-03-15",
+    "gender": "male",
+    "phone": "010-1234-5678",
+    "email": "kim.minsu@example.com",
+    "address": "서울특별시 강남구 테헤란로 123",
+    "emergency_contact": {
+      "name": "김영희",
+      "relationship": "배우자",
+      "phone": "010-1234-5679"
+    },
+    "allergies": ["페니실린", "땅콩"],
+    "blood_type": "A+"
+  },
+  {
+    "patient_id": "P-2025-002",
+    "family_name": "이",
+    "given_name": "서연",
+    "birth_date": "1992-07-22",
+    "gender": "female",
+    "phone": "010-2345-6789",
+    "email": "lee.seoyeon@example.com",
+    "address": "서울특별시 서초구 서초대로 456",
+    "emergency_contact": {
+      "name": "이철수",
+      "relationship": "부",
+      "phone": "010-2345-6780"
+    },
+    "allergies": ["새우", "갑각류"],
+    "blood_type": "B+"
+  },
+  {
+    "patient_id": "P-2025-003",
+    "family_name": "박",
+    "given_name": "준호",
+    "birth_date": "1978-11-05",
+    "gender": "male",
+    "phone": "010-3456-7890",
+    "email": "park.junho@example.com",
+    "address": "서울특별시 송파구 올림픽로 789",
+    "emergency_contact": {
+      "name": "박미경",
+      "relationship": "배우자",
+      "phone": "010-3456-7891"
+    },
+    "allergies": [],
+    "blood_type": "O+"
+  },
+  {
+    "patient_id": "P-2025-004",
+    "family_name": "최",
+    "given_name": "지은",
+    "birth_date": "1995-01-30",
+    "gender": "female",
+    "phone": "010-4567-8901",
+    "email": "choi.jieun@example.com",
+    "address": "서울특별시 마포구 월드컵북로 234",
+    "emergency_contact": {
+      "name": "최영수",
+      "relationship": "부",
+      "phone": "010-4567-8902"
+    },
+    "allergies": ["아스피린"],
+    "blood_type": "AB+"
+  },
+  {
+    "patient_id": "P-2025-005",
+    "family_name": "정",
+    "given_name": "우진",
+    "birth_date": "1988-06-14",
+    "gender": "male",
+    "phone": "010-5678-9012",
+    "email": "jung.woojin@example.com",
+    "address": "서울특별시 용산구 이태원로 567",
+    "emergency_contact": {
+      "name": "정수진",
+      "relationship": "배우자",
+      "phone": "010-5678-9013"
+    },
+    "allergies": ["고양이 털"],
+    "blood_type": "A-"
+  },
+  {
+    "patient_id": "P-2025-006",
+    "family_name": "강",
+    "given_name": "하늘",
+    "birth_date": "2000-09-08",
+    "gender": "female",
+    "phone": "010-6789-0123",
+    "email": "kang.haneul@example.com",
+    "address": "서울특별시 영등포구 여의대로 890",
+    "emergency_contact": {
+      "name": "강민호",
+      "relationship": "부",
+      "phone": "010-6789-0124"
+    },
+    "allergies": [],
+    "blood_type": "B-"
+  },
+  {
+    "patient_id": "P-2025-007",
+    "family_name": "조",
+    "given_name": "태양",
+    "birth_date": "1983-12-25",
+    "gender": "male",
+    "phone": "010-7890-1234",
+    "email": "cho.taeyang@example.com",
+    "address": "서울특별시 성동구 왕십리로 345",
+    "emergency_contact": {
+      "name": "조은별",
+      "relationship": "배우자",
+      "phone": "010-7890-1235"
+    },
+    "allergies": ["요오드"],
+    "blood_type": "O-"
+  },
+  {
+    "patient_id": "P-2025-008",
+    "family_name": "윤",
+    "given_name": "소희",
+    "birth_date": "1997-04-18",
+    "gender": "female",
+    "phone": "010-8901-2345",
+    "email": "yoon.sohee@example.com",
+    "address": "서울특별시 관악구 관악로 678",
+    "emergency_contact": {
+      "name": "윤정호",
+      "relationship": "부",
+      "phone": "010-8901-2346"
+    },
+    "allergies": ["라텍스", "고무"],
+    "blood_type": "AB-"
+  },
+  {
+    "patient_id": "P-2025-009",
+    "family_name": "장",
+    "given_name": "민재",
+    "birth_date": "1990-08-12",
+    "gender": "male",
+    "phone": "010-9012-3456",
+    "email": "jang.minjae@example.com",
+    "address": "서울특별시 동대문구 천호대로 901",
+    "emergency_contact": {
+      "name": "장수연",
+      "relationship": "배우자",
+      "phone": "010-9012-3457"
+    },
+    "allergies": ["황산계 항생제"],
+    "blood_type": "A+"
+  },
+  {
+    "patient_id": "P-2025-010",
+    "family_name": "임",
+    "given_name": "예린",
+    "birth_date": "1986-02-28",
+    "gender": "female",
+    "phone": "010-0123-4567",
+    "email": "lim.yerin@example.com",
+    "address": "서울특별시 광진구 능동로 234",
+    "emergency_contact": {
+      "name": "임동현",
+      "relationship": "배우자",
+      "phone": "010-0123-4568"
+    },
+    "allergies": [],
+    "blood_type": "B+"
+  },
+  {
+    "patient_id": "P-2025-011",
+    "family_name": "한",
+    "given_name": "지훈",
+    "birth_date": "1993-10-10",
+    "gender": "male",
+    "phone": "010-1111-2222",
+    "email": "han.jihoon@example.com",
+    "address": "서울특별시 노원구 노해로 567",
+    "emergency_contact": {
+      "name": "한미선",
+      "relationship": "모",
+      "phone": "010-1111-2223"
+    },
+    "allergies": ["꽃가루"],
+    "blood_type": "O+"
+  },
+  {
+    "patient_id": "P-2025-012",
+    "family_name": "오",
+    "given_name": "수진",
+    "birth_date": "1981-05-20",
+    "gender": "female",
+    "phone": "010-2222-3333",
+    "email": "oh.sujin@example.com",
+    "address": "서울특별시 은평구 은평로 890",
+    "emergency_contact": {
+      "name": "오재민",
+      "relationship": "배우자",
+      "phone": "010-2222-3334"
+    },
+    "allergies": ["달걀", "우유"],
+    "blood_type": "A-"
+  },
+  {
+    "patient_id": "P-2025-013",
+    "family_name": "서",
+    "given_name": "현우",
+    "birth_date": "1996-07-07",
+    "gender": "male",
+    "phone": "010-3333-4444",
+    "email": "seo.hyunwoo@example.com",
+    "address": "서울특별시 성북구 동소문로 123",
+    "emergency_contact": {
+      "name": "서정아",
+      "relationship": "모",
+      "phone": "010-3333-4445"
+    },
+    "allergies": [],
+    "blood_type": "B-"
+  },
+  {
+    "patient_id": "P-2025-014",
+    "family_name": "신",
+    "given_name": "다은",
+    "birth_date": "1989-11-11",
+    "gender": "female",
+    "phone": "010-4444-5555",
+    "email": "shin.daeun@example.com",
+    "address": "서울특별시 강북구 도봉로 456",
+    "emergency_contact": {
+      "name": "신종훈",
+      "relationship": "배우자",
+      "phone": "010-4444-5556"
+    },
+    "allergies": ["조개류"],
+    "blood_type": "AB+"
+  },
+  {
+    "patient_id": "P-2025-015",
+    "family_name": "권",
+    "given_name": "성민",
+    "birth_date": "1994-03-03",
+    "gender": "male",
+    "phone": "010-5555-6666",
+    "email": "kwon.seongmin@example.com",
+    "address": "서울특별시 강서구 공항대로 789",
+    "emergency_contact": {
+      "name": "권영숙",
+      "relationship": "모",
+      "phone": "010-5555-6667"
+    },
+    "allergies": ["밀가루"],
+    "blood_type": "O-"
+  },
+  {
+    "patient_id": "P-2025-016",
+    "family_name": "황",
+    "given_name": "보람",
+    "birth_date": "1987-12-31",
+    "gender": "female",
+    "phone": "010-6666-7777",
+    "email": "hwang.boram@example.com",
+    "address": "서울특별시 양천구 목동서로 345",
+    "emergency_contact": {
+      "name": "황준석",
+      "relationship": "배우자",
+      "phone": "010-6666-7778"
+    },
+    "allergies": ["페니실린", "설파제"],
+    "blood_type": "A+"
+  },
+  {
+    "patient_id": "P-2025-017",
+    "family_name": "안",
+    "given_name": "재현",
+    "birth_date": "1991-06-06",
+    "gender": "male",
+    "phone": "010-7777-8888",
+    "email": "ahn.jaehyun@example.com",
+    "address": "서울특별시 구로구 디지털로 678",
+    "emergency_contact": {
+      "name": "안소영",
+      "relationship": "배우자",
+      "phone": "010-7777-8889"
+    },
+    "allergies": [],
+    "blood_type": "B+"
+  },
+  {
+    "patient_id": "P-2025-018",
+    "family_name": "송",
+    "given_name": "유나",
+    "birth_date": "1998-09-15",
+    "gender": "female",
+    "phone": "010-8888-9999",
+    "email": "song.yuna@example.com",
+    "address": "서울특별시 금천구 시흥대로 901",
+    "emergency_contact": {
+      "name": "송철민",
+      "relationship": "부",
+      "phone": "010-8888-9990"
+    },
+    "allergies": ["아스피린", "NSAIDs"],
+    "blood_type": "O+"
+  },
+  {
+    "patient_id": "P-2025-019",
+    "family_name": "백",
+    "given_name": "도현",
+    "birth_date": "1984-01-01",
+    "gender": "male",
+    "phone": "010-9999-0000",
+    "email": "baek.dohyun@example.com",
+    "address": "서울특별시 동작구 상도로 234",
+    "emergency_contact": {
+      "name": "백은지",
+      "relationship": "배우자",
+      "phone": "010-9999-0001"
+    },
+    "allergies": ["요오드 조영제"],
+    "blood_type": "A-"
+  },
+  {
+    "patient_id": "P-2025-020",
+    "family_name": "전",
+    "given_name": "슬기",
+    "birth_date": "1999-04-04",
+    "gender": "female",
+    "phone": "010-1010-2020",
+    "email": "jeon.seulgi@example.com",
+    "address": "서울특별시 중랑구 망우로 567",
+    "emergency_contact": {
+      "name": "전현수",
+      "relationship": "부",
+      "phone": "010-1010-2021"
+    },
+    "allergies": [],
+    "blood_type": "B-"
+  },
+  {
+    "patient_id": "P-2025-021",
+    "family_name": "유",
+    "given_name": "승호",
+    "birth_date": "1982-08-08",
+    "gender": "male",
+    "phone": "010-2020-3030",
+    "email": "yoo.seungho@example.com",
+    "address": "서울특별시 도봉구 노해로 890",
+    "emergency_contact": {
+      "name": "유미라",
+      "relationship": "배우자",
+      "phone": "010-2020-3031"
+    },
+    "allergies": ["갑각류", "새우"],
+    "blood_type": "AB+"
+  },
+  {
+    "patient_id": "P-2025-022",
+    "family_name": "홍",
+    "given_name": "채원",
+    "birth_date": "1995-02-14",
+    "gender": "female",
+    "phone": "010-3030-4040",
+    "email": "hong.chaewon@example.com",
+    "address": "인천광역시 남동구 인주대로 123",
+    "emergency_contact": {
+      "name": "홍성우",
+      "relationship": "부",
+      "phone": "010-3030-4041"
+    },
+    "allergies": ["라텍스"],
+    "blood_type": "O-"
+  },
+  {
+    "patient_id": "P-2025-023",
+    "family_name": "노",
+    "given_name": "준서",
+    "birth_date": "1988-05-05",
+    "gender": "male",
+    "phone": "010-4040-5050",
+    "email": "noh.junseo@example.com",
+    "address": "인천광역시 연수구 송도대로 456",
+    "emergency_contact": {
+      "name": "노은희",
+      "relationship": "배우자",
+      "phone": "010-4040-5051"
+    },
+    "allergies": [],
+    "blood_type": "A+"
+  },
+  {
+    "patient_id": "P-2025-024",
+    "family_name": "심",
+    "given_name": "아름",
+    "birth_date": "1993-07-17",
+    "gender": "female",
+    "phone": "010-5050-6060",
+    "email": "shim.areum@example.com",
+    "address": "경기도 성남시 분당구 판교로 789",
+    "emergency_contact": {
+      "name": "심동욱",
+      "relationship": "부",
+      "phone": "010-5050-6061"
+    },
+    "allergies": ["페니실린"],
+    "blood_type": "B+"
+  },
+  {
+    "patient_id": "P-2025-025",
+    "family_name": "문",
+    "given_name": "지훈",
+    "birth_date": "1986-10-10",
+    "gender": "male",
+    "phone": "010-6060-7070",
+    "email": "moon.jihoon@example.com",
+    "address": "경기도 고양시 일산동구 중앙로 345",
+    "emergency_contact": {
+      "name": "문서연",
+      "relationship": "배우자",
+      "phone": "010-6060-7071"
+    },
+    "allergies": ["고양이 털", "개 털"],
+    "blood_type": "O+"
+  },
+  {
+    "patient_id": "P-2025-026",
+    "family_name": "손",
+    "given_name": "혜진",
+    "birth_date": "1997-03-23",
+    "gender": "female",
+    "phone": "010-7070-8080",
+    "email": "son.hyejin@example.com",
+    "address": "경기도 수원시 영통구 광교로 678",
+    "emergency_contact": {
+      "name": "손재호",
+      "relationship": "부",
+      "phone": "010-7070-8081"
+    },
+    "allergies": [],
+    "blood_type": "A-"
+  },
+  {
+    "patient_id": "P-2025-027",
+    "family_name": "배",
+    "given_name": "정훈",
+    "birth_date": "1990-12-12",
+    "gender": "male",
+    "phone": "010-8080-9090",
+    "email": "bae.junghoon@example.com",
+    "address": "경기도 용인시 기흥구 삼성로 901",
+    "emergency_contact": {
+      "name": "배민지",
+      "relationship": "배우자",
+      "phone": "010-8080-9091"
+    },
+    "allergies": ["황산계 항생제"],
+    "blood_type": "B-"
+  },
+  {
+    "patient_id": "P-2025-028",
+    "family_name": "고",
+    "given_name": "은별",
+    "birth_date": "1994-06-26",
+    "gender": "female",
+    "phone": "010-9090-0101",
+    "email": "ko.eunbyeol@example.com",
+    "address": "경기도 안양시 동안구 평촌대로 234",
+    "emergency_contact": {
+      "name": "고태진",
+      "relationship": "배우자",
+      "phone": "010-9090-0102"
+    },
+    "allergies": ["조개류", "해산물"],
+    "blood_type": "AB-"
+  },
+  {
+    "patient_id": "P-2025-029",
+    "family_name": "남",
+    "given_name": "건우",
+    "birth_date": "1987-09-09",
+    "gender": "male",
+    "phone": "010-0101-1010",
+    "email": "nam.gunwoo@example.com",
+    "address": "경기도 부천시 원미구 부천로 567",
+    "emergency_contact": {
+      "name": "남수진",
+      "relationship": "배우자",
+      "phone": "010-0101-1011"
+    },
+    "allergies": ["요오드"],
+    "blood_type": "A+"
+  },
+  {
+    "patient_id": "P-2025-030",
+    "family_name": "진",
+    "given_name": "서우",
+    "birth_date": "1992-11-29",
+    "gender": "female",
+    "phone": "010-1212-2323",
+    "email": "jin.seowoo@example.com",
+    "address": "경기도 화성시 동탄대로 890",
+    "emergency_contact": {
+      "name": "진민호",
+      "relationship": "배우자",
+      "phone": "010-1212-2324"
+    },
+    "allergies": [],
+    "blood_type": "O+"
+  }
+]
