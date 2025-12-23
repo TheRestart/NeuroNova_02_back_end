@@ -16,6 +16,15 @@ services:
     networks:
       - cdss-network
 
+  redis:
+    image: redis:alpine
+    container_name: cdss-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    networks:
+      - cdss-network
+
 volumes:
   rabbitmq-data:
 

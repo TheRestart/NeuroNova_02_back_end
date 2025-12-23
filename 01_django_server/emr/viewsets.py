@@ -1,11 +1,18 @@
 """
 EMR ViewSets for CRUD Operations
+
+아키텍처:
+- Single Source of Truth: OpenEMR (FHIR Server)
+- Django DB: Read Cache Only
+- Write-Through Strategy: FHIR 서버 먼저 업데이트 → 성공 시 Django DB 업데이트
 """
 
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
+from django.utils import timezone
+import logging
 
 from .models import PatientCache, Encounter, Order, OrderItem
 from .serializers import (
@@ -15,18 +22,26 @@ from .serializers import (
     OrderItemSerializer, OrderItemUpdateSerializer
 )
 from .services import PatientService, EncounterService, OrderService
+from .fhir_adapter import FHIRServiceAdapter
+
+logger = logging.getLogger(__name__)
 
 
 class PatientCacheViewSet(viewsets.ModelViewSet):
     """
-    환자 CRUD ViewSet
+    환자 CRUD ViewSet (Write-Through Pattern)
 
     - list: GET /api/emr/patients/
     - retrieve: GET /api/emr/patients/{id}/
     - create: POST /api/emr/patients/
     - update: PUT /api/emr/patients/{id}/
-    - partial_update: PATCH /api/emr/patients/{id}/
+    - partial_update: PATCH /api/emr/patients/{id}/  (Write-Through 적용)
     - destroy: DELETE /api/emr/patients/{id}/
+
+    데이터 수정 흐름:
+    1. FHIR 서버에 수정 요청
+    2. 성공 시 Django DB 업데이트
+    3. 실패 시 Django DB 수정 없이 에러 반환
     """
     queryset = PatientCache.objects.all()
     permission_classes = [AllowAny]  # 개발 모드
@@ -47,6 +62,76 @@ class PatientCacheViewSet(viewsets.ModelViewSet):
         # 응답용 Serializer
         response_serializer = PatientCacheSerializer(patient)
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+
+    def partial_update(self, request, *args, **kwargs):
+        """
+        환자 프로필 수정 (PATCH) - Write-Through Pattern
+
+        처리 흐름:
+        1. Django DB에서 환자 조회
+        2. FHIR Adapter를 통해 FHIR 서버에 수정 요청
+        3. FHIR 서버 응답 처리:
+           - 성공 (200): Django DB 업데이트 후 200 응답
+           - 거절 (400): Django DB 수정 없이 400 에러 응답
+           - 장애 (Exception): Django DB 수정 없이 503 에러 응답
+        """
+        # Given: 환자 조회
+        patient = self.get_object()
+
+        # Serializer 검증
+        serializer = self.get_serializer(patient, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+
+        # OpenEMR Patient ID 확인
+        if not patient.openemr_patient_id:
+            logger.warning(f"Patient {patient.patient_id} has no OpenEMR ID - skipping FHIR sync")
+            # OpenEMR과 동기화되지 않은 환자는 Django DB만 업데이트
+            self.perform_update(serializer)
+            return Response(serializer.data)
+
+        # When: FHIR Adapter를 통해 FHIR 서버에 수정 요청
+        fhir_adapter = FHIRServiceAdapter()
+        update_data = {
+            key: value for key, value in serializer.validated_data.items()
+            if key in ['phone', 'email', 'address']  # FHIR 동기화 대상 필드만
+        }
+
+        try:
+            # FHIR 서버에 업데이트 요청 (선행)
+            success, result = fhir_adapter.update_patient(
+                patient.openemr_patient_id,
+                update_data
+            )
+
+            # Then: 결과 처리
+            if success:
+                # Case A: FHIR 서버 업데이트 성공 -> Django DB 업데이트
+                logger.info(f"FHIR update success for patient {patient.patient_id}")
+                self.perform_update(serializer)
+
+                # 동기화 시간 갱신
+                patient.last_synced_at = timezone.now()
+                patient.save(update_fields=['last_synced_at'])
+
+                return Response(serializer.data, status=status.HTTP_200_OK)
+
+            else:
+                # Case B: FHIR 서버 거절 (유효성 검사 실패 등)
+                error_msg = result.get('error', 'FHIR validation failed')
+                logger.warning(f"FHIR validation failed for patient {patient.patient_id}: {error_msg}")
+                return Response(
+                    {"error": error_msg, "detail": "FHIR server rejected the update"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        except Exception as e:
+            # Case C: FHIR 서버 통신 장애
+            error_msg = str(e)
+            logger.error(f"FHIR server error for patient {patient.patient_id}: {error_msg}")
+            return Response(
+                {"error": "FHIR server communication failed", "detail": error_msg},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE
+            )
 
     @action(detail=False, methods=['get'])
     def search(self, request):

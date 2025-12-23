@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 from django.db import models
+from django.conf import settings
 import uuid
 
 
@@ -81,3 +82,30 @@ class User(AbstractBaseUser, PermissionsMixin):
     
     def get_short_name(self):
         return self.username
+
+
+class Alert(models.Model):
+    """
+    사용자 알림 모델 (UC07)
+    - 시스템 이벤트(AI 완료, 이상 징후 등)를 사용자에게 알림
+    - WebSocket으로 실시간 전송 후 영속화
+    """
+    ALERT_TYPES = (
+        ('INFO', 'Information'),
+        ('WARNING', 'Warning'),
+        ('CRITICAL', 'Critical'),
+        ('SUCCESS', 'Success'),
+    )
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='alerts')
+    message = models.TextField(help_text="알림 내용")
+    type = models.CharField(max_length=20, choices=ALERT_TYPES, default='INFO')
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    metadata = models.JSONField(null=True, blank=True, help_text="추가 데이터 (Link 등)")
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"[{self.type}] {self.user.username} - {self.message[:20]}"

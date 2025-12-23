@@ -40,6 +40,7 @@ CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:3000'
 # Application definition
 
 INSTALLED_APPS = [
+    "daphne",  # ASGI Server (Must be before django.contrib.staticfiles)
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -50,6 +51,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
     "corsheaders",
+    "channels",  # Django Channels
     "acct",  # UC01 - Authentication & Authorization
     "emr",   # UC02 - EMR Proxy
     "ris",   # UC05 - Radiology Information System
@@ -73,7 +75,7 @@ ROOT_URLCONF = "cdss_backend.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / 'templates'],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -87,6 +89,17 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "cdss_backend.wsgi.application"
+ASGI_APPLICATION = "cdss_backend.asgi.application"
+
+# Django Channels Layer (Redis)
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [(os.getenv('REDIS_HOST', 'localhost'), int(os.getenv('REDIS_PORT', '6379')))],
+        },
+    },
+}
 
 
 # Database
@@ -168,7 +181,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = 'acct.User'
 
 # Security Toggle (개발/프로덕션 모드)
-ENABLE_SECURITY = os.getenv('ENABLE_SECURITY', 'True') == 'True'
+ENABLE_SECURITY = os.getenv('ENABLE_SECURITY', 'False') == 'True'
 
 # JWT 설정
 from datetime import timedelta
@@ -210,3 +223,6 @@ RABBITMQ_PASSWORD = os.getenv('RABBITMQ_PASSWORD', 'guest')
 
 # AI Server 설정 (추후 Flask AI Server 통합 시 사용)
 AI_SERVER_URL = os.getenv('AI_SERVER_URL', 'http://localhost:5000')
+
+# FHIR Server 설정 (UC8 - HAPI FHIR)
+FHIR_SERVER_URL = os.getenv('FHIR_SERVER_URL', 'http://localhost:8080/fhir')

@@ -5,7 +5,10 @@ from .repositories import (
     PatientRepository,
     EncounterRepository,
     OrderRepository,
-    OpenEMRPatientRepository
+    EncounterRepository,
+    OrderRepository,
+    OpenEMRPatientRepository,
+    OpenEMROrderRepository
 )
 import logging
 
@@ -33,17 +36,15 @@ class PatientService:
         # Transaction으로 Django DB와 OpenEMR DB 동시 등록 보장
         try:
             with transaction.atomic():
-                # 1. Django DB에 환자 등록
-                patient = PatientRepository.create_patient(data)
-                logger.info(f"Patient created in Django DB: {patient_id}")
-
-                # 2. OpenEMR DB에 환자 등록
+                # 1. OpenEMR DB에 환자 등록
                 openemr_pid = OpenEMRPatientRepository.create_patient_in_openemr(data)
                 logger.info(f"Patient created in OpenEMR DB: pid={openemr_pid}, pubpid={patient_id}")
 
-                # 3. Django 환자 객체에 OpenEMR pid 저장 (선택사항)
-                patient.openemr_patient_id = str(openemr_pid)
-                patient.save()
+                # 2. Django DB에 환자 등록 (Cache)
+                # OpenEMR pid를 포함하여 저장
+                data['openemr_patient_id'] = str(openemr_pid)
+                patient = PatientRepository.create_patient(data)
+                logger.info(f"Patient created (cached) in Django DB: {patient_id}")
 
                 return patient
 
@@ -61,13 +62,8 @@ class EncounterService:
         진료 기록 생성 및 ID 자동 생성 (E-YYYY-NNNNNN)
         """
         year = datetime.now().year
-        last_encounter = EncounterRepository.get_last_encounter_by_year(year)
-
-        if last_encounter:
-            last_number = int(last_encounter.encounter_id.split('-')[-1])
-            new_number = last_number + 1
-        else:
-            new_number = 1
+        last_number = EncounterRepository.get_max_encounter_sequence(year)
+        new_number = last_number + 1
 
         encounter_id = f'E-{year}-{new_number:06d}'
         data['encounter_id'] = encounter_id
@@ -85,13 +81,8 @@ class OrderService:
         처방 항목 ID 자동 생성 (OI-ORDERID-NNN)
         """
         year = datetime.now().year
-        last_order = OrderRepository.get_last_order_by_year(year)
-
-        if last_order:
-            last_number = int(last_order.order_id.split('-')[-1])
-            new_number = last_number + 1
-        else:
-            new_number = 1
+        last_number = OrderRepository.get_max_order_sequence(year)
+        new_number = last_number + 1
 
         order_id = f'O-{year}-{new_number:06d}'
         order_data['order_id'] = order_id
@@ -103,4 +94,16 @@ class OrderService:
             item['item_id'] = item_id
             final_items_data.append(item)
 
-        return OrderRepository.create_order(order_data, final_items_data)
+        # 1. OpenEMR DB에 처방 생성 (Source of Truth)
+        try:
+            OpenEMROrderRepository.create_prescription_in_openemr(order_data, final_items_data)
+            logger.info(f"Prescription created in OpenEMR for Order {order_id}")
+        except Exception as e:
+            logger.error(f"Failed to create prescription in OpenEMR: {str(e)}")
+            raise Exception(f"OpenEMR 처방 생성 실패: {str(e)}")
+
+        # 2. Django DB에 처방 생성 (Cache) (Transaction)
+        order = OrderRepository.create_order(order_data, final_items_data)
+        logger.info(f"Prescription created (cached) in Django DB: {order_id}")
+
+        return order

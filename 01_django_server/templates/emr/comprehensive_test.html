@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CDSS 종합 테스트 대시보드</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.8em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .header .version {
+            margin-top: 10px;
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        /* Navigation Tabs */
+        .nav-tabs {
+            display: flex;
+            background: #f5f5f5;
+            border-bottom: 3px solid #667eea;
+            overflow-x: auto;
+        }
+
+        .nav-tab {
+            flex: 1;
+            padding: 18px 20px;
+            cursor: pointer;
+            background: #f5f5f5;
+            border: none;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-align: center;
+            min-width: 150px;
+            color: #555;
+        }
+
+        .nav-tab:hover {
+            background: #e8e8e8;
+            color: #667eea;
+        }
+
+        .nav-tab.active {
+            background: white;
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+            margin-bottom: -3px;
+        }
+
+        .nav-tab .badge {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            margin-left: 5px;
+        }
+
+        .nav-tab.active .badge {
+            background: #764ba2;
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+            padding: 30px;
+            animation: fadeIn 0.3s;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Section Cards */
+        .section {
+            background: #f9f9f9;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-left: 5px solid #667eea;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .section h2 {
+            color: #667eea;
+            font-size: 1.6em;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section h2::before {
+            content: "▸";
+            font-size: 1.2em;
+        }
+
+        .section h3 {
+            color: #555;
+            font-size: 1.2em;
+            margin: 20px 0 15px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        /* Form Elements */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        /* Buttons */
+        .button-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button.secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+        }
+
+        button.success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+
+        button.danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+
+        button.warning {
+            background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+        }
+
+        /* Response Box */
+        .response-box {
+            background: #1e1e1e;
+            color: #00ff00;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 500px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .response-box .success {
+            color: #00ff00;
+        }
+
+        .response-box .error {
+            color: #ff4444;
+        }
+
+        .response-box .info {
+            color: #00bfff;
+        }
+
+        .response-box .warning {
+            color: #ffaa00;
+        }
+
+        /* Status Indicator */
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-indicator.online {
+            background: #28a745;
+            box-shadow: 0 0 8px #28a745;
+        }
+
+        .status-indicator.offline {
+            background: #dc3545;
+            box-shadow: 0 0 8px #dc3545;
+        }
+
+        .status-indicator.loading {
+            background: #ffc107;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Info Box */
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .info-box.success {
+            background: #e8f5e9;
+            border-left-color: #4CAF50;
+        }
+
+        .info-box.warning {
+            background: #fff3cd;
+            border-left-color: #ffc107;
+        }
+
+        .info-box.error {
+            background: #ffebee;
+            border-left-color: #f44336;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #764ba2;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+            display: none;
+        }
+
+        .spinner.active {
+            display: block;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Statistics Dashboard */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-top: 4px solid #667eea;
+        }
+
+        .stat-card .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+            margin: 10px 0;
+        }
+
+        .stat-card .stat-label {
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🏥 CDSS 종합 테스트 대시보드</h1>
+            <div class="subtitle">Clinical Decision Support System - Comprehensive Test Dashboard</div>
+            <div class="version">Version 2.0 | Updated: 2025-12-23</div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="switchTab('overview')">
+                📊 개요<span class="badge">HOME</span>
+            </button>
+            <button class="nav-tab" onclick="switchTab('openemr')">
+                🔗 OpenEMR 연동<span class="badge">UC02</span>
+            </button>
+            <button class="nav-tab" onclick="switchTab('patient')">
+                👥 환자 관리<span class="badge">CRUD</span>
+            </button>
+            <button class="nav-tab" onclick="switchTab('encounter')">
+                📋 진료 기록<span class="badge">CRUD</span>
+            </button>
+            <button class="nav-tab" onclick="switchTab('order')">
+                💊 처방 관리<span class="badge">OCS</span>
+            </button>
+            <button class="nav-tab" onclick="switchTab('writethrough')">
+                🔄 Write-Through<span class="badge">NEW</span>
+            </button>
+        </div>
+
+        <!-- Tab Content: Overview -->
+        <div id="tab-overview" class="tab-content active">
+            <div class="section">
+                <h2>시스템 상태</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Django 서버</div>
+                        <div class="stat-value">
+                            <span class="status-indicator online"></span>ON
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">OpenEMR 연결</div>
+                        <div class="stat-value" id="openemr-status">
+                            <span class="status-indicator loading"></span>확인중
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">총 테스트 실행</div>
+                        <div class="stat-value" id="total-tests">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">성공률</div>
+                        <div class="stat-value" id="success-rate">0%</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>빠른 시작 가이드</h2>
+                <div class="info-box">
+                    <strong>📌 사용 방법:</strong>
+                    <ul style="margin-top: 10px; margin-left: 20px;">
+                        <li>상단 탭을 클릭하여 원하는 테스트 메뉴로 이동하세요.</li>
+                        <li>"예시입력" 버튼을 클릭하면 자동으로 테스트 데이터가 입력됩니다.</li>
+                        <li>각 API 호출 결과는 하단 응답 박스에 실시간으로 표시됩니다.</li>
+                        <li>Write-Through 탭에서 FHIR 서버 연동을 테스트할 수 있습니다.</li>
+                    </ul>
+                </div>
+
+                <div class="info-box success">
+                    <strong>✅ 구현 완료 기능:</strong>
+                    <ul style="margin-top: 10px; margin-left: 20px;">
+                        <li><strong>UC01 (ACCT)</strong>: 인증/권한 시스템 (JWT, 7개 역할)</li>
+                        <li><strong>UC02 (EMR)</strong>: OpenEMR 프록시 + CRUD API</li>
+                        <li><strong>UC03 (OCS)</strong>: 처방전달시스템 (Order/OrderItem)</li>
+                        <li><strong>UC05 (RIS)</strong>: 영상의학정보시스템</li>
+                        <li><strong>UC06 (AI)</strong>: AI Queue (RabbitMQ 통합)</li>
+                    </ul>
+                </div>
+
+                <div class="button-group">
+                    <button onclick="runHealthCheck()">전체 시스템 점검</button>
+                    <button class="secondary" onclick="clearAllResponses()">응답 박스 초기화</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Content: OpenEMR Integration -->
+        <div id="tab-openemr" class="tab-content">
+            <div class="section">
+                <h2>OpenEMR 서버 연결 테스트</h2>
+
+                <div class="button-group">
+                    <button onclick="testOpenEMRHealth()">🏥 Health Check</button>
+                    <button onclick="testOpenEMRAuth()">🔐 인증 테스트</button>
+                    <button onclick="testOpenEMRPatientList()">👥 환자 목록 (10명)</button>
+                    <button onclick="testOpenEMRPatientSearch()">🔍 환자 검색</button>
+                </div>
+
+                <h3>환자 상세 조회</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>OpenEMR Patient ID</label>
+                        <input type="text" id="openemr-patient-id" placeholder="예: 1">
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button onclick="testOpenEMRPatientDetail()">환자 상세 조회</button>
+                    <button class="secondary" onclick="document.getElementById('openemr-patient-id').value='1'">예시입력</button>
+                </div>
+
+                <div class="response-box" id="response-openemr">API 응답이 여기에 표시됩니다...</div>
+            </div>
+        </div>
+
+        <!-- Tab Content: Patient CRUD -->
+        <div id="tab-patient" class="tab-content">
+            <div class="section">
+                <h2>환자 CRUD 테스트</h2>
+
+                <h3>1. 환자 생성 (POST)</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>성(family_name)</label>
+                        <input type="text" id="patient-family-name" placeholder="홍">
+                    </div>
+                    <div class="form-group">
+                        <label>이름(given_name)</label>
+                        <input type="text" id="patient-given-name" placeholder="길동">
+                    </div>
+                    <div class="form-group">
+                        <label>생년월일</label>
+                        <input type="date" id="patient-birth-date">
+                    </div>
+                    <div class="form-group">
+                        <label>성별</label>
+                        <select id="patient-gender">
+                            <option value="male">남성</option>
+                            <option value="female">여성</option>
+                            <option value="other">기타</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>전화번호</label>
+                        <input type="text" id="patient-phone" placeholder="010-1234-5678">
+                    </div>
+                    <div class="form-group">
+                        <label>이메일</label>
+                        <input type="text" id="patient-email" placeholder="hong@example.com">
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button onclick="createPatient()">환자 생성</button>
+                    <button class="secondary" onclick="fillPatientExampleData()">예시입력</button>
+                </div>
+
+                <h3>2. 환자 목록 조회 (GET)</h3>
+                <div class="button-group">
+                    <button onclick="listPatients()">전체 환자 목록</button>
+                    <button onclick="searchPatients()">환자 검색</button>
+                </div>
+
+                <h3>3. 환자 상세 조회 (GET)</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Patient ID</label>
+                        <input type="text" id="patient-id-retrieve" placeholder="P-2025-000001">
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button onclick="retrievePatient()">환자 상세 조회</button>
+                </div>
+
+                <h3>4. 환자 수정 (PATCH)</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Patient ID</label>
+                        <input type="text" id="patient-id-update" placeholder="P-2025-000001">
+                    </div>
+                    <div class="form-group">
+                        <label>새 전화번호</label>
+                        <input type="text" id="patient-phone-update" placeholder="010-9999-8888">
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button class="warning" onclick="updatePatient()">환자 정보 수정</button>
+                </div>
+
+                <h3>5. 환자 삭제 (DELETE)</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Patient ID</label>
+                        <input type="text" id="patient-id-delete" placeholder="P-2025-000001">
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button class="danger" onclick="deletePatient()">환자 삭제</button>
+                </div>
+
+                <div class="response-box" id="response-patient">API 응답이 여기에 표시됩니다...</div>
+            </div>
+        </div>
+
+        <!-- Tab Content: Encounter CRUD -->
+        <div id="tab-encounter" class="tab-content">
+            <div class="section">
+                <h2>진료 기록 CRUD 테스트</h2>
+
+                <h3>1. 진료 기록 생성 (POST)</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Patient ID</label>
+                        <input type="text" id="encounter-patient-id" placeholder="P-2025-000001">
+                    </div>
+                    <div class="form-group">
+                        <label>Doctor ID (UUID)</label>
+                        <input type="text" id="encounter-doctor-id" placeholder="8f1035ad-7279-4dd3-89cd-497f002811ec">
+                    </div>
+                    <div class="form-group">
+                        <label>진료 유형</label>
+                        <select id="encounter-type">
+                            <option value="outpatient">외래</option>
+                            <option value="emergency">응급</option>
+                            <option value="inpatient">입원</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>진료 부서</label>
+                        <input type="text" id="encounter-department" placeholder="신경외과">
+                    </div>
+                    <div class="form-group">
+                        <label>주 호소</label>
+                        <input type="text" id="encounter-complaint" placeholder="두통">
+                    </div>
+                    <div class="form-group">
+                        <label>진단</label>
+                        <input type="text" id="encounter-diagnosis" placeholder="편두통">
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button onclick="createEncounter()">진료 기록 생성</button>
+                    <button class="secondary" onclick="fillEncounterExampleData()">예시입력</button>
+                </div>
+
+                <h3>2. 진료 기록 목록 (GET)</h3>
+                <div class="button-group">
+                    <button onclick="listEncounters()">전체 진료 기록</button>
+                </div>
+
+                <div class="response-box" id="response-encounter">API 응답이 여기에 표시됩니다...</div>
+            </div>
+        </div>
+
+        <!-- Tab Content: Order/OCS -->
+        <div id="tab-order" class="tab-content">
+            <div class="section">
+                <h2>처방 관리 CRUD 테스트 (OCS)</h2>
+
+                <h3>1. 처방 생성 (POST)</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Patient ID</label>
+                        <input type="text" id="order-patient-id" placeholder="P-2025-000001">
+                    </div>
+                    <div class="form-group">
+                        <label>Ordered By (Doctor UUID)</label>
+                        <input type="text" id="order-ordered-by" placeholder="8f1035ad-7279-4dd3-89cd-497f002811ec">
+                    </div>
+                    <div class="form-group">
+                        <label>처방 유형</label>
+                        <select id="order-type">
+                            <option value="medication">약물</option>
+                            <option value="lab">검사</option>
+                            <option value="imaging">영상</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>우선순위</label>
+                        <select id="order-urgency">
+                            <option value="routine">일반</option>
+                            <option value="urgent">긴급</option>
+                            <option value="stat">즉시</option>
+                        </select>
+                    </div>
+                </div>
+
+                <h3>처방 항목 (OrderItem)</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>약품명</label>
+                        <input type="text" id="item-drug-name" placeholder="타이레놀">
+                    </div>
+                    <div class="form-group">
+                        <label>용량</label>
+                        <input type="text" id="item-dosage" placeholder="500mg">
+                    </div>
+                    <div class="form-group">
+                        <label>복용 빈도</label>
+                        <input type="text" id="item-frequency" placeholder="1일 3회">
+                    </div>
+                    <div class="form-group">
+                        <label>복용 기간</label>
+                        <input type="text" id="item-duration" placeholder="7일">
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button onclick="createOrder()">처방 생성 (항목 포함)</button>
+                    <button class="secondary" onclick="fillOrderExampleData()">예시입력</button>
+                </div>
+
+                <h3>2. 처방 목록 조회 (GET)</h3>
+                <div class="button-group">
+                    <button onclick="listOrders()">전체 처방 목록</button>
+                </div>
+
+                <h3>3. 처방 항목 수정 (PATCH)</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>OrderItem ID</label>
+                        <input type="text" id="item-id-update" placeholder="OI-O-2025-000001-001">
+                    </div>
+                    <div class="form-group">
+                        <label>새 용량</label>
+                        <input type="text" id="item-dosage-update" placeholder="1000mg">
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button class="warning" onclick="updateOrderItem()">처방 항목 수정</button>
+                </div>
+
+                <div class="response-box" id="response-order">API 응답이 여기에 표시됩니다...</div>
+            </div>
+        </div>
+
+        <!-- Tab Content: Write-Through Pattern -->
+        <div id="tab-writethrough" class="tab-content">
+            <div class="section">
+                <h2>Write-Through 패턴 테스트</h2>
+
+                <div class="info-box">
+                    <strong>📘 Write-Through 패턴이란?</strong>
+                    <p style="margin-top: 10px;">
+                        OpenEMR (FHIR 서버)이 환자 정보의 <strong>유일한 원본(Single Source of Truth)</strong>이며,
+                        Django DB는 읽기 캐시 역할을 합니다. 환자 프로필 수정 시:
+                    </p>
+                    <ol style="margin-top: 10px; margin-left: 20px;">
+                        <li>FHIR 서버에 먼저 업데이트 요청</li>
+                        <li>성공 시 → Django DB 업데이트 + 200 OK</li>
+                        <li>거절 시 → Django DB 수정 없음 + 400 Bad Request</li>
+                        <li>장애 시 → Django DB 수정 없음 + 503 Service Unavailable</li>
+                    </ol>
+                </div>
+
+                <h3>1. 환자 프로필 수정 (Write-Through)</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Patient ID</label>
+                        <input type="text" id="wt-patient-id" placeholder="P-2025-000001">
+                    </div>
+                    <div class="form-group">
+                        <label>새 전화번호</label>
+                        <input type="text" id="wt-phone" placeholder="010-9999-8888">
+                    </div>
+                    <div class="form-group">
+                        <label>새 이메일</label>
+                        <input type="text" id="wt-email" placeholder="newemail@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label>새 주소</label>
+                        <input type="text" id="wt-address" placeholder="서울시 강남구...">
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button onclick="testWriteThrough()">Write-Through 수정 실행</button>
+                    <button class="secondary" onclick="fillWriteThroughExampleData()">예시입력</button>
+                </div>
+
+                <div class="info-box warning" style="margin-top: 20px;">
+                    <strong>⚠️ 주의:</strong>
+                    <ul style="margin-top: 10px; margin-left: 20px;">
+                        <li>이 테스트는 실제 FHIR 서버 연동이 필요합니다.</li>
+                        <li>OpenEMR과 동기화된 환자만 테스트 가능합니다 (openemr_patient_id 필요).</li>
+                        <li>FHIR 서버가 다운되어 있으면 503 에러가 발생합니다.</li>
+                    </ul>
+                </div>
+
+                <div class="response-box" id="response-writethrough">API 응답이 여기에 표시됩니다...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api/emr';
+        let testStats = {
+            total: 0,
+            success: 0,
+            failed: 0
+        };
+
+        // Tab Switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            event.target.classList.add('active');
+            document.getElementById('tab-' + tabName).classList.add('active');
+        }
+
+        // API Helper
+        async function apiCall(method, endpoint, data = null, responseBoxId = 'response-openemr') {
+            const responseBox = document.getElementById(responseBoxId);
+            responseBox.innerHTML = '<div class="spinner active"></div><div class="info">요청 처리 중...</div>';
+
+            testStats.total++;
+            updateStats();
+
+            try {
+                const options = {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                };
+
+                if (data) {
+                    options.body = JSON.stringify(data);
+                }
+
+                const response = await fetch(API_BASE + endpoint, options);
+                const result = await response.json();
+
+                if (response.ok) {
+                    testStats.success++;
+                    responseBox.innerHTML = `<div class="success">✅ 성공 (${response.status})</div>\n\n` +
+                                          JSON.stringify(result, null, 2);
+                } else {
+                    testStats.failed++;
+                    responseBox.innerHTML = `<div class="error">❌ 실패 (${response.status})</div>\n\n` +
+                                          JSON.stringify(result, null, 2);
+                }
+            } catch (error) {
+                testStats.failed++;
+                responseBox.innerHTML = `<div class="error">❌ 네트워크 오류</div>\n\n${error.message}`;
+            }
+
+            updateStats();
+        }
+
+        // Update Statistics
+        function updateStats() {
+            document.getElementById('total-tests').textContent = testStats.total;
+            const successRate = testStats.total > 0 ?
+                Math.round((testStats.success / testStats.total) * 100) : 0;
+            document.getElementById('success-rate').textContent = successRate + '%';
+        }
+
+        // Health Check
+        async function runHealthCheck() {
+            testOpenEMRHealth();
+        }
+
+        function clearAllResponses() {
+            document.querySelectorAll('.response-box').forEach(box => {
+                box.innerHTML = 'API 응답이 여기에 표시됩니다...';
+            });
+        }
+
+        // OpenEMR Tests
+        async function testOpenEMRHealth() {
+            await apiCall('GET', '/health/', null, 'response-openemr');
+
+            // Update status indicator
+            const statusEl = document.getElementById('openemr-status');
+            statusEl.innerHTML = '<span class="status-indicator online"></span>ON';
+        }
+
+        async function testOpenEMRAuth() {
+            await apiCall('POST', '/auth/', null, 'response-openemr');
+        }
+
+        async function testOpenEMRPatientList() {
+            await apiCall('GET', '/openemr/patients/', null, 'response-openemr');
+        }
+
+        async function testOpenEMRPatientSearch() {
+            await apiCall('GET', '/openemr/patients/search/?fname=John', null, 'response-openemr');
+        }
+
+        async function testOpenEMRPatientDetail() {
+            const patientId = document.getElementById('openemr-patient-id').value;
+            if (!patientId) {
+                alert('Patient ID를 입력하세요.');
+                return;
+            }
+            await apiCall('GET', `/openemr/patients/${patientId}/`, null, 'response-openemr');
+        }
+
+        // Patient CRUD
+        function fillPatientExampleData() {
+            document.getElementById('patient-family-name').value = '홍';
+            document.getElementById('patient-given-name').value = '길동';
+            document.getElementById('patient-birth-date').value = '1990-01-01';
+            document.getElementById('patient-gender').value = 'male';
+            document.getElementById('patient-phone').value = '010-1234-5678';
+            document.getElementById('patient-email').value = 'hong@example.com';
+        }
+
+        async function createPatient() {
+            const data = {
+                family_name: document.getElementById('patient-family-name').value,
+                given_name: document.getElementById('patient-given-name').value,
+                birth_date: document.getElementById('patient-birth-date').value,
+                gender: document.getElementById('patient-gender').value,
+                phone: document.getElementById('patient-phone').value,
+                email: document.getElementById('patient-email').value
+            };
+            await apiCall('POST', '/patients/', data, 'response-patient');
+        }
+
+        async function listPatients() {
+            await apiCall('GET', '/patients/', null, 'response-patient');
+        }
+
+        async function searchPatients() {
+            await apiCall('GET', '/patients/search/?q=홍', null, 'response-patient');
+        }
+
+        async function retrievePatient() {
+            const patientId = document.getElementById('patient-id-retrieve').value;
+            if (!patientId) {
+                alert('Patient ID를 입력하세요.');
+                return;
+            }
+            await apiCall('GET', `/patients/${patientId}/`, null, 'response-patient');
+        }
+
+        async function updatePatient() {
+            const patientId = document.getElementById('patient-id-update').value;
+            const phone = document.getElementById('patient-phone-update').value;
+            if (!patientId || !phone) {
+                alert('Patient ID와 전화번호를 입력하세요.');
+                return;
+            }
+            await apiCall('PATCH', `/patients/${patientId}/`, { phone }, 'response-patient');
+        }
+
+        async function deletePatient() {
+            const patientId = document.getElementById('patient-id-delete').value;
+            if (!patientId) {
+                alert('Patient ID를 입력하세요.');
+                return;
+            }
+            if (!confirm('정말 삭제하시겠습니까?')) return;
+            await apiCall('DELETE', `/patients/${patientId}/`, null, 'response-patient');
+        }
+
+        // Encounter CRUD
+        function fillEncounterExampleData() {
+            document.getElementById('encounter-patient-id').value = 'P-2025-000001';
+            document.getElementById('encounter-doctor-id').value = '8f1035ad-7279-4dd3-89cd-497f002811ec';
+            document.getElementById('encounter-type').value = 'outpatient';
+            document.getElementById('encounter-department').value = '신경외과';
+            document.getElementById('encounter-complaint').value = '두통';
+            document.getElementById('encounter-diagnosis').value = '편두통';
+        }
+
+        async function createEncounter() {
+            const data = {
+                patient_id: document.getElementById('encounter-patient-id').value,
+                doctor_id: document.getElementById('encounter-doctor-id').value,
+                encounter_type: document.getElementById('encounter-type').value,
+                department: document.getElementById('encounter-department').value,
+                chief_complaint: document.getElementById('encounter-complaint').value,
+                diagnosis: document.getElementById('encounter-diagnosis').value,
+                status: 'scheduled'
+            };
+            await apiCall('POST', '/encounters/', data, 'response-encounter');
+        }
+
+        async function listEncounters() {
+            await apiCall('GET', '/encounters/', null, 'response-encounter');
+        }
+
+        // Order/OCS CRUD
+        function fillOrderExampleData() {
+            document.getElementById('order-patient-id').value = 'P-2025-000001';
+            document.getElementById('order-ordered-by').value = '8f1035ad-7279-4dd3-89cd-497f002811ec';
+            document.getElementById('order-type').value = 'medication';
+            document.getElementById('order-urgency').value = 'routine';
+            document.getElementById('item-drug-name').value = '타이레놀';
+            document.getElementById('item-dosage').value = '500mg';
+            document.getElementById('item-frequency').value = '1일 3회';
+            document.getElementById('item-duration').value = '7일';
+        }
+
+        async function createOrder() {
+            const data = {
+                patient_id: document.getElementById('order-patient-id').value,
+                ordered_by: document.getElementById('order-ordered-by').value,
+                order_type: document.getElementById('order-type').value,
+                urgency: document.getElementById('order-urgency').value,
+                status: 'pending',
+                items: [{
+                    drug_name: document.getElementById('item-drug-name').value,
+                    drug_code: 'DRUG001',
+                    dosage: document.getElementById('item-dosage').value,
+                    frequency: document.getElementById('item-frequency').value,
+                    duration: document.getElementById('item-duration').value,
+                    route: 'oral'
+                }]
+            };
+            await apiCall('POST', '/orders/', data, 'response-order');
+        }
+
+        async function listOrders() {
+            await apiCall('GET', '/orders/', null, 'response-order');
+        }
+
+        async function updateOrderItem() {
+            const itemId = document.getElementById('item-id-update').value;
+            const dosage = document.getElementById('item-dosage-update').value;
+            if (!itemId || !dosage) {
+                alert('OrderItem ID와 용량을 입력하세요.');
+                return;
+            }
+            await apiCall('PATCH', `/order-items/${itemId}/`, { dosage }, 'response-order');
+        }
+
+        // Write-Through Pattern
+        function fillWriteThroughExampleData() {
+            document.getElementById('wt-patient-id').value = 'P-2025-000001';
+            document.getElementById('wt-phone').value = '010-9999-8888';
+            document.getElementById('wt-email').value = 'newemail@example.com';
+            document.getElementById('wt-address').value = '서울시 강남구 테헤란로 123';
+        }
+
+        async function testWriteThrough() {
+            const patientId = document.getElementById('wt-patient-id').value;
+            const data = {
+                phone: document.getElementById('wt-phone').value,
+                email: document.getElementById('wt-email').value,
+                address: document.getElementById('wt-address').value
+            };
+
+            if (!patientId) {
+                alert('Patient ID를 입력하세요.');
+                return;
+            }
+
+            await apiCall('PATCH', `/patients/${patientId}/`, data, 'response-writethrough');
+        }
+
+        // Initialize
+        window.onload = function() {
+            runHealthCheck();
+        };
+    </script>
+</body>
+</html>

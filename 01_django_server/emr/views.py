@@ -46,6 +46,15 @@ def test_ui_legacy(request):
     from django.shortcuts import render
     return render(request, 'emr/emr_test_ui.html')
 
+def comprehensive_test(request):
+    """
+    종합 테스트 대시보드 뷰
+
+    모든 EMR CRUD, OpenEMR 연동, Write-Through 패턴을 통합한 테스트 페이지
+    """
+    from django.shortcuts import render
+    return render(request, 'emr/test_dashboard.html')
+
 
 @require_http_methods(["GET"])
 def list_patients(request):

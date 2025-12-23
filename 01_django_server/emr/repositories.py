@@ -209,11 +209,23 @@ class EncounterRepository:
         return Encounter.objects.filter(encounter_id=encounter_id).first()
 
     @staticmethod
-    def get_last_encounter_by_year(year):
-        """해당 연도의 마지막 진료 기록 조회 (ID 생성용)"""
-        return Encounter.objects.filter(
-            encounter_id__startswith=f'E-{year}-'
-        ).order_by('-encounter_id').first()
+    def get_max_encounter_sequence(year):
+        """해당 연도 진료기록 Max Sequence 조회"""
+        prefix = f'E-{year}-'
+        # 모든 ID 조회 후 메모리에서 Max 계산 (데이터량 적음 가정)
+        encounters = Encounter.objects.filter(encounter_id__startswith=prefix).values_list('encounter_id', flat=True)
+        
+        max_seq = 0
+        for eid in encounters:
+            try:
+                parts = eid.split('-')
+                if len(parts) >= 3:
+                    seq = int(parts[-1])
+                    if seq > max_seq:
+                        max_seq = seq
+            except ValueError:
+                continue
+        return max_seq
 
 
 class OrderRepository:
@@ -231,8 +243,104 @@ class OrderRepository:
             return order
 
     @staticmethod
-    def get_last_order_by_year(year):
-        """해당 연도의 마지막 처방 조회 (ID 생성용)"""
-        return Order.objects.filter(
-            order_id__startswith=f'O-{year}-'
-        ).order_by('-order_id').first()
+    def get_max_order_sequence(year):
+        """해당 연도 처방 Max Sequence 조회"""
+        prefix = f'O-{year}-'
+        orders = Order.objects.filter(order_id__startswith=prefix).values_list('order_id', flat=True)
+        
+        max_seq = 0
+        for oid in orders:
+            try:
+                parts = oid.split('-')
+                if len(parts) >= 3:
+                    seq = int(parts[-1])
+                    if seq > max_seq:
+                        max_seq = seq
+            except ValueError:
+                continue
+        return max_seq
+
+
+class OpenEMROrderRepository:
+    """OpenEMR prescriptions 테이블 직접 접근"""
+
+    @staticmethod
+    def create_prescription_in_openemr(order_data, items_data):
+        """
+        OpenEMR prescriptions 테이블에 처방 등록
+        
+        Args:
+            order_data: Order 생성을 위한 딕셔너리 (patient_id 포함 필수)
+            items_data: OrderItem 생성을 위한 딕셔너리 리스트
+        
+        Returns:
+            list[int]: 생성된 OpenEMR prescription id 목록 (필요시)
+        """
+        # 1. 환자의 OpenEMR pid 조회
+        # order_data에는 'patient'가 객체일 수도 있고 ID 문자열일 수도 있음
+        # 여기서는 patient_id 문자열을 우선 사용
+        patient_ref = order_data.get('patient')
+        if hasattr(patient_ref, 'patient_id'):
+            patient_id_str = patient_ref.patient_id
+        else:
+            patient_id_str = str(patient_ref)
+
+        patient_info = OpenEMRPatientRepository.get_patient_by_pubpid(patient_id_str)
+        if not patient_info:
+            raise Exception(f"OpenEMR에서 환자를 찾을 수 없습니다. (Patient ID: {patient_id_str})")
+        
+        pid = patient_info['pid']
+        now = datetime.now()
+
+        created_ids = []
+
+        # 2. 각 처방 항목을 prescriptions 테이블에 Insert
+        with connections['openemr'].cursor() as cursor:
+            for item in items_data:
+                sql = """
+                    INSERT INTO prescriptions (
+                        patient_id,
+                        drug,
+                        dosage,
+                        quantity,
+                        refills,
+                        start_date,
+                        date_added,
+                        date_modified,
+                        provider_id,
+                        active,
+                        txDate,
+                        usage_category_title,
+                        request_intent_title
+                    ) VALUES (
+                        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                    )
+                """
+                
+                # item이 객체인지 딕셔너리인지 확인
+                drug_name = getattr(item, 'drug_name', item.get('drug_name'))
+                dosage = getattr(item, 'dosage', item.get('dosage'))
+
+                # Dosage + Frequency + Duration을 조합하여 quantity나 note에 넣을 수도 있지만,
+                # 여기서는 주요 필드만 매핑
+                params = (
+                    pid,                    # patient_id (int)
+                    drug_name,              # drug
+                    dosage,                 # dosage
+                    1,                      # quantity (기본값)
+                    0,                      # refills (기본값)
+                    now.date(),             # start_date
+                    now,                    # date_added
+                    now,                    # date_modified
+                    1,                      # provider_id (Default Admin user for now, or fetch map)
+                    1,                      # active (1=active)
+                    now.date(),             # txDate (처방 일자)
+                    '',                     # usage_category_title (필수, 빈값)
+                    ''                      # request_intent_title (필수, 빈값)
+                )
+                
+                cursor.execute(sql, params)
+                created_ids.append(cursor.lastrowid)
+
+        return created_ids
+

@@ -25,4 +25,5 @@ urlpatterns = [
     # Test Dashboard (UI)
     path('test-dashboard/', views.test_dashboard, name='test_dashboard'),
     path('test-ui/', views.test_ui_legacy, name='test_ui_legacy'),
+    path('comprehensive-test/', views.comprehensive_test, name='comprehensive_test'),
 ]

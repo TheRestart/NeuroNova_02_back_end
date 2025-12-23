@@ -104,6 +104,21 @@
                 </div>
             </div>
 
+            <!-- 2.5 처방 목록 조회 -->
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        Step 2.5: 전체 처방 목록 조회 (View All Orders)
+                    </div>
+                    <div class="card-body">
+                        <button class="btn btn-info text-white w-100 mb-3" onclick="listOrders()">
+                            📋 전체 처방 조회 (Refresh List)
+                        </button>
+                        <div id="result-list" class="result-box" style="max-height: 200px;">조회 결과가 여기에 표시됩니다.</div>
+                    </div>
+                </div>
+            </div>
+
             <!-- 3. 처방 항목 수정 -->
             <div class="col-md-6">
                 <div class="card h-100">
@@ -115,8 +130,8 @@
 
                         <div class="mb-3">
                             <label class="form-label">대상 항목 ID</label>
-                            <input type="text" id="update-item-id" class="form-control" readonly
-                                placeholder="Step 2 완료 시 자동 입력">
+                            <input type="text" id="update-item-id" class="form-control"
+                                placeholder="Step 2 완료 시 자동 입력 (수동 입력 가능)">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">변경할 용량</label>
@@ -217,6 +232,7 @@
                 "patient": patientId,
                 "order_type": "medication",
                 "urgency": "routine",
+                "ordered_by": "test-doctor",
                 "order_items": [
                     {
                         "drug_code": "D001",
@@ -250,6 +266,24 @@
             }
         }
 
+        // --- Step 2.5: List Orders ---
+        async function listOrders() {
+            try {
+                const response = await fetch('/api/emr/orders/');
+                const text = await response.text(); // Get raw text first
+
+                try {
+                    const result = JSON.parse(text); // Try parsing JSON
+                    document.getElementById('result-list').innerText = JSON.stringify(result, null, 2);
+                } catch (e) {
+                    // If JSON parse fails, show raw text (HTML error page, etc.)
+                    document.getElementById('result-list').innerText = "Stack Trace / Raw HTML:\n" + text;
+                }
+            } catch (error) {
+                document.getElementById('result-list').innerText = "Network Error: " + error;
+            }
+        }
+
         // --- Step 3: Update Item ---
         async function updateOrderItem() {
             const itemId = document.getElementById('update-item-id').value;
@@ -270,8 +304,15 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
-                const result = await response.json();
-                document.getElementById('result-update').innerText = JSON.stringify(result, null, 2);
+
+                const text = await response.text();
+                try {
+                    const result = JSON.parse(text);
+                    document.getElementById('result-update').innerText = JSON.stringify(result, null, 2);
+                } catch (e) {
+                    document.getElementById('result-update').innerText = text;
+                }
+
             } catch (error) {
                 document.getElementById('result-update').innerText = "Error: " + error;
             }
@@ -297,8 +338,13 @@
                     document.getElementById('result-delete').innerText = "Success: Item Deleted (204 No Content)";
                     // Reset IDs if needed, or keep for record
                 } else {
-                    const result = await response.json();
-                    document.getElementById('result-delete').innerText = JSON.stringify(result, null, 2);
+                    const text = await response.text();
+                    try {
+                        const result = JSON.parse(text);
+                        document.getElementById('result-delete').innerText = JSON.stringify(result, null, 2);
+                    } catch (e) {
+                        document.getElementById('result-delete').innerText = text;
+                    }
                 }
             } catch (error) {
                 document.getElementById('result-delete').innerText = "Error: " + error;
