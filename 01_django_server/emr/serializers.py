@@ -35,13 +35,6 @@ class PatientCreateSerializer(serializers.ModelSerializer):
             'phone', 'email', 'address', 'emergency_contact', 'allergies', 'blood_type'
         ]
 
-    class Meta:
-        model = PatientCache
-        fields = [
-            'family_name', 'given_name', 'birth_date', 'gender',
-            'phone', 'email', 'address', 'emergency_contact', 'allergies', 'blood_type'
-        ]
-
 
 class EncounterSerializer(serializers.ModelSerializer):
     """진료 기록 시리얼라이저"""
@@ -62,13 +55,6 @@ class EncounterSerializer(serializers.ModelSerializer):
 
 class EncounterCreateSerializer(serializers.ModelSerializer):
     """진료 기록 생성 시리얼라이저"""
-
-    class Meta:
-        model = Encounter
-        fields = [
-            'patient', 'doctor_id', 'encounter_type', 'department',
-            'chief_complaint', 'diagnosis', 'status', 'encounter_date'
-        ]
 
     class Meta:
         model = Encounter
@@ -123,9 +109,13 @@ class OrderCreateSerializer(serializers.ModelSerializer):
             'urgency', 'status', 'notes', 'order_items'
         ]
 
+
+class OrderItemUpdateSerializer(serializers.ModelSerializer):
+    """처방 항목 수정 시리얼라이저"""
+
     class Meta:
-        model = Order
+        model = OrderItem
         fields = [
-            'patient', 'encounter', 'ordered_by', 'order_type',
-            'urgency', 'status', 'notes', 'order_items'
+            'drug_code', 'drug_name', 'dosage',
+            'frequency', 'duration', 'route', 'instructions'
         ]

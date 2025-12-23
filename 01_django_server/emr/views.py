@@ -24,9 +24,27 @@ def health_check(request):
 @csrf_exempt
 @require_http_methods(["POST"])
 def authenticate(request):
-    """OpenEMR 인증"""
-    result = client.authenticate()
-    return JsonResponse(result)
+    """OpenEMR 인증 API"""
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        username = data.get('username')
+        password = data.get('password')
+        
+        result = client.authenticate(username, password)
+        return JsonResponse(result)
+        
+    return JsonResponse({"error": "Method not allowed"}, status=405)
+
+
+def test_dashboard(request):
+    """테스트 시나리오 대시보드 뷰"""
+    from django.shortcuts import render
+    return render(request, 'emr/test_dashboard.html')
+
+def test_ui_legacy(request):
+    """[Legacy] OpenEMR 연동 테스트 UI 뷰"""
+    from django.shortcuts import render
+    return render(request, 'emr/emr_test_ui.html')
 
 
 @require_http_methods(["GET"])

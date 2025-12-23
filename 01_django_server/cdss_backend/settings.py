@@ -17,8 +17,8 @@ from dotenv import load_dotenv
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load environment variables from .env file
-load_dotenv(os.path.join(BASE_DIR, '.env'))
+# Load environment variables from .env file (override=True to force reload)
+load_dotenv(os.path.join(BASE_DIR, '.env'), override=True)
 
 
 # Quick-start development settings - unsuitable for production
@@ -108,8 +108,8 @@ DATABASES = {
     'openemr': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': os.getenv('OPENEMR_DB_NAME', 'openemr'),
-        'USER': os.getenv('OPENEMR_DB_USER', 'openemr_readonly'),
-        'PASSWORD': os.getenv('OPENEMR_DB_PASSWORD', 'openemr_password'),
+        'USER': os.getenv('OPENEMR_DB_USER', 'openemr'),
+        'PASSWORD': os.getenv('OPENEMR_DB_PASSWORD', 'openemr'),
         'HOST': os.getenv('OPENEMR_DB_HOST', 'localhost'),
         'PORT': os.getenv('OPENEMR_DB_PORT', '3307'),
         'OPTIONS': {
@@ -168,7 +168,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = 'acct.User'
 
 # Security Toggle (개발/프로덕션 모드)
-ENABLE_SECURITY = os.getenv('ENABLE_SECURITY', 'False') == 'True'
+ENABLE_SECURITY = os.getenv('ENABLE_SECURITY', 'True') == 'True'
 
 # JWT 설정
 from datetime import timedelta

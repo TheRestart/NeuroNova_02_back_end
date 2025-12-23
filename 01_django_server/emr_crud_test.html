@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EMR CRUD 유닛테스트</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            padding: 30px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            background: #f5f5f5;
+            border: none;
+            border-radius: 8px 8px 0 0;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .tab:hover {
+            background: #e0e0e0;
+        }
+
+        .tab.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .section {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #555;
+            font-size: 14px;
+        }
+
+        input, select, textarea {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(72, 187, 120, 0.3);
+        }
+
+        .btn-warning {
+            background: #ed8936;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #dd6b20;
+        }
+
+        .btn-danger {
+            background: #f56565;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #e53e3e;
+        }
+
+        .btn-info {
+            background: #4299e1;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background: #3182ce;
+        }
+
+        .response {
+            background: #1a202c;
+            color: #68d391;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .status-success {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .status-error {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .data-list {
+            margin-top: 20px;
+        }
+
+        .data-item {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .data-item:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .badge-male {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+
+        .badge-female {
+            background: #fbb6ce;
+            color: #702459;
+        }
+
+        .badge-status {
+            background: #faf089;
+            color: #744210;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(102, 126, 234, 0.3);
+            border-radius: 50%;
+            border-top-color: #667eea;
+            animation: spin 0.6s linear infinite;
+            margin-right: 10px;
+        }
+
+        .item-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏥 EMR CRUD 유닛테스트</h1>
+        <p class="subtitle">환자, 진료, 처방 데이터 CRUD 테스트 도구</p>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('patient')">👤 환자 (Patient)</button>
+            <button class="tab" onclick="showTab('encounter')">🩺 진료 (Encounter)</button>
+            <button class="tab" onclick="showTab('order')">💊 처방 (Order)</button>
+            <button class="tab" onclick="showTab('list')">📋 데이터 조회</button>
+        </div>
+
+        <!-- 환자 탭 -->
+        <div id="patient-tab" class="tab-content active">
+            <div class="section">
+                <h2>👤 환자 생성 (CREATE)</h2>
+                <div class="button-group" style="margin-bottom: 15px;">
+                    <button class="btn-secondary" onclick="fillPatientExample()">📝 예시입력</button>
+                    <button class="btn-info" onclick="clearPatientForm()">🔄 초기화</button>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>성 (Family Name) *</label>
+                        <input type="text" id="patient-family-name" placeholder="김">
+                    </div>
+                    <div class="form-group">
+                        <label>이름 (Given Name) *</label>
+                        <input type="text" id="patient-given-name" placeholder="철수">
+                    </div>
+                    <div class="form-group">
+                        <label>생년월일 (Birth Date) *</label>
+                        <input type="date" id="patient-birth-date">
+                    </div>
+                    <div class="form-group">
+                        <label>성별 (Gender) *</label>
+                        <select id="patient-gender">
+                            <option value="">선택하세요</option>
+                            <option value="male">남성</option>
+                            <option value="female">여성</option>
+                            <option value="other">기타</option>
+                            <option value="unknown">미상</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>전화번호 (Phone)</label>
+                        <input type="tel" id="patient-phone" placeholder="010-1234-5678">
+                    </div>
+                    <div class="form-group">
+                        <label>이메일 (Email)</label>
+                        <input type="email" id="patient-email" placeholder="example@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label>혈액형 (Blood Type)</label>
+                        <select id="patient-blood-type">
+                            <option value="">선택하세요</option>
+                            <option value="A+">A+</option>
+                            <option value="A-">A-</option>
+                            <option value="B+">B+</option>
+                            <option value="B-">B-</option>
+                            <option value="O+">O+</option>
+                            <option value="O-">O-</option>
+                            <option value="AB+">AB+</option>
+                            <option value="AB-">AB-</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label>주소 (Address)</label>
+                    <textarea id="patient-address" placeholder="서울시 강남구 테헤란로 123"></textarea>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn-primary" onclick="createPatient()">✅ 환자 생성 (POST)</button>
+                    <button class="btn-info" onclick="listPatients()">📋 전체 조회 (GET)</button>
+                </div>
+
+                <div class="loading" id="patient-loading">
+                    <span class="spinner"></span>처리 중...
+                </div>
+                <div id="patient-response"></div>
+            </div>
+
+            <div class="section">
+                <h2>🔍 환자 검색/조회/수정/삭제</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>환자 ID</label>
+                        <input type="text" id="patient-id-search" placeholder="P-2025-000001">
+                    </div>
+                    <div class="form-group">
+                        <label>검색어 (이름, 전화, 이메일)</label>
+                        <input type="text" id="patient-search-query" placeholder="김철수">
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn-info" onclick="getPatientById()">🔍 ID로 조회 (GET)</button>
+                    <button class="btn-info" onclick="searchPatients()">🔎 검색 (GET)</button>
+                    <button class="btn-warning" onclick="updatePatient()">✏️ 수정 (PUT)</button>
+                    <button class="btn-danger" onclick="deletePatient()">🗑️ 삭제 (DELETE)</button>
+                </div>
+
+                <div class="loading" id="patient-crud-loading">
+                    <span class="spinner"></span>처리 중...
+                </div>
+                <div id="patient-crud-response"></div>
+            </div>
+        </div>
+
+        <!-- 진료 탭 -->
+        <div id="encounter-tab" class="tab-content">
+            <div class="section">
+                <h2>🩺 진료 기록 생성 (CREATE)</h2>
+                <div class="button-group" style="margin-bottom: 15px;">
+                    <button class="btn-secondary" onclick="fillEncounterExample()">📝 예시입력</button>
+                    <button class="btn-info" onclick="clearEncounterForm()">🔄 초기화</button>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>환자 ID *</label>
+                        <input type="text" id="encounter-patient-id" placeholder="P-2025-000001">
+                    </div>
+                    <div class="form-group">
+                        <label>의사 ID *</label>
+                        <input type="text" id="encounter-doctor-id" placeholder="UUID 형식">
+                    </div>
+                    <div class="form-group">
+                        <label>진료 유형 *</label>
+                        <select id="encounter-type">
+                            <option value="">선택하세요</option>
+                            <option value="outpatient">외래</option>
+                            <option value="emergency">응급</option>
+                            <option value="inpatient">입원</option>
+                            <option value="discharge">퇴원</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>진료 부서 *</label>
+                        <input type="text" id="encounter-department" placeholder="신경외과">
+                    </div>
+                    <div class="form-group">
+                        <label>진료 상태</label>
+                        <select id="encounter-status">
+                            <option value="scheduled">예정</option>
+                            <option value="in_progress">진행중</option>
+                            <option value="completed">완료</option>
+                            <option value="cancelled">취소</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>진료 일시 *</label>
+                        <input type="datetime-local" id="encounter-date">
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label>주 호소 (Chief Complaint)</label>
+                    <textarea id="encounter-complaint" placeholder="두통 및 어지러움"></textarea>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label>진단 (Diagnosis)</label>
+                    <textarea id="encounter-diagnosis" placeholder="편두통 의심"></textarea>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn-primary" onclick="createEncounter()">✅ 진료 생성 (POST)</button>
+                    <button class="btn-info" onclick="listEncounters()">📋 전체 조회 (GET)</button>
+                </div>
+
+                <div class="loading" id="encounter-loading">
+                    <span class="spinner"></span>처리 중...
+                </div>
+                <div id="encounter-response"></div>
+            </div>
+        </div>
+
+        <!-- 처방 탭 -->
+        <div id="order-tab" class="tab-content">
+            <div class="section">
+                <h2>💊 처방 생성 (CREATE)</h2>
+                <div class="button-group" style="margin-bottom: 15px;">
+                    <button class="btn-secondary" onclick="fillOrderExample()">📝 예시입력</button>
+                    <button class="btn-info" onclick="clearOrderForm()">🔄 초기화</button>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>환자 ID *</label>
+                        <input type="text" id="order-patient-id" placeholder="P-2025-000001">
+                    </div>
+                    <div class="form-group">
+                        <label>진료 ID</label>
+                        <input type="text" id="order-encounter-id" placeholder="E-2025-000001">
+                    </div>
+                    <div class="form-group">
+                        <label>처방 의사 ID *</label>
+                        <input type="text" id="order-doctor-id" placeholder="UUID 형식">
+                    </div>
+                    <div class="form-group">
+                        <label>처방 유형 *</label>
+                        <select id="order-type">
+                            <option value="">선택하세요</option>
+                            <option value="medication">약물</option>
+                            <option value="lab">검사</option>
+                            <option value="radiology">영상</option>
+                            <option value="procedure">시술</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>긴급도</label>
+                        <select id="order-urgency">
+                            <option value="routine">일반</option>
+                            <option value="urgent">긴급</option>
+                            <option value="stat">즉시</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>상태</label>
+                        <select id="order-status">
+                            <option value="pending">대기</option>
+                            <option value="approved">승인</option>
+                            <option value="in_progress">진행중</option>
+                            <option value="completed">완료</option>
+                            <option value="cancelled">취소</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label>처방 메모</label>
+                    <textarea id="order-notes" placeholder="처방 관련 메모"></textarea>
+                </div>
+
+                <h3 style="margin-top: 20px; margin-bottom: 10px; color: #667eea;">약물 항목 (Order Items)</h3>
+                <div id="order-items-container"></div>
+                <button class="btn-secondary btn-sm" onclick="addOrderItem()">➕ 약물 추가</button>
+
+                <div class="button-group" style="margin-top: 20px;">
+                    <button class="btn-primary" onclick="createOrder()">✅ 처방 생성 (POST)</button>
+                    <button class="btn-info" onclick="listOrders()">📋 전체 조회 (GET)</button>
+                </div>
+
+                <div class="loading" id="order-loading">
+                    <span class="spinner"></span>처리 중...
+                </div>
+                <div id="order-response"></div>
+            </div>
+        </div>
+
+        <!-- 데이터 조회 탭 -->
+        <div id="list-tab" class="tab-content">
+            <div class="section">
+                <h2>📋 데이터 전체 조회</h2>
+                <div class="button-group">
+                    <button class="btn-info" onclick="listAllPatients()">👤 환자 목록</button>
+                    <button class="btn-info" onclick="listAllEncounters()">🩺 진료 목록</button>
+                    <button class="btn-info" onclick="listAllOrders()">💊 처방 목록</button>
+                    <button class="btn-danger" onclick="clearAllData()">🗑️ 전체 데이터 삭제</button>
+                </div>
+
+                <div class="loading" id="list-loading">
+                    <span class="spinner"></span>처리 중...
+                </div>
+                <div id="list-response"></div>
+                <div id="data-list-container" class="data-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8000/api/emr';
+
+        // 탭 전환
+        function showTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            event.target.classList.add('active');
+            document.getElementById(tabName + '-tab').classList.add('active');
+        }
+
+        // === 환자 (Patient) ===
+
+        function fillPatientExample() {
+            document.getElementById('patient-family-name').value = '김';
+            document.getElementById('patient-given-name').value = '철수';
+            document.getElementById('patient-birth-date').value = '1990-05-15';
+            document.getElementById('patient-gender').value = 'male';
+            document.getElementById('patient-phone').value = '010-1234-5678';
+            document.getElementById('patient-email').value = 'kim.cs@example.com';
+            document.getElementById('patient-blood-type').value = 'A+';
+            document.getElementById('patient-address').value = '서울시 강남구 테헤란로 123';
+        }
+
+        function clearPatientForm() {
+            document.getElementById('patient-family-name').value = '';
+            document.getElementById('patient-given-name').value = '';
+            document.getElementById('patient-birth-date').value = '';
+            document.getElementById('patient-gender').value = '';
+            document.getElementById('patient-phone').value = '';
+            document.getElementById('patient-email').value = '';
+            document.getElementById('patient-blood-type').value = '';
+            document.getElementById('patient-address').value = '';
+        }
+
+        async function createPatient() {
+            const data = {
+                family_name: document.getElementById('patient-family-name').value,
+                given_name: document.getElementById('patient-given-name').value,
+                birth_date: document.getElementById('patient-birth-date').value,
+                gender: document.getElementById('patient-gender').value,
+                phone: document.getElementById('patient-phone').value || null,
+                email: document.getElementById('patient-email').value || null,
+                blood_type: document.getElementById('patient-blood-type').value || null,
+                address: document.getElementById('patient-address').value || null,
+            };
+
+            await apiRequest('POST', `${API_BASE_URL}/patients/`, data, 'patient');
+        }
+
+        async function listPatients() {
+            await apiRequest('GET', `${API_BASE_URL}/patients/`, null, 'patient');
+        }
+
+        async function getPatientById() {
+            const patientId = document.getElementById('patient-id-search').value;
+            if (!patientId) {
+                alert('환자 ID를 입력하세요');
+                return;
+            }
+            await apiRequest('GET', `${API_BASE_URL}/patients/${patientId}/`, null, 'patient-crud');
+        }
+
+        async function searchPatients() {
+            const query = document.getElementById('patient-search-query').value;
+            if (!query) {
+                alert('검색어를 입력하세요');
+                return;
+            }
+            await apiRequest('GET', `${API_BASE_URL}/patients/search/?q=${query}`, null, 'patient-crud');
+        }
+
+        async function updatePatient() {
+            const patientId = document.getElementById('patient-id-search').value;
+            if (!patientId) {
+                alert('환자 ID를 입력하세요');
+                return;
+            }
+
+            const data = {
+                family_name: document.getElementById('patient-family-name').value,
+                given_name: document.getElementById('patient-given-name').value,
+                birth_date: document.getElementById('patient-birth-date').value,
+                gender: document.getElementById('patient-gender').value,
+                phone: document.getElementById('patient-phone').value,
+                email: document.getElementById('patient-email').value,
+                blood_type: document.getElementById('patient-blood-type').value,
+                address: document.getElementById('patient-address').value,
+            };
+
+            await apiRequest('PUT', `${API_BASE_URL}/patients/${patientId}/`, data, 'patient-crud');
+        }
+
+        async function deletePatient() {
+            const patientId = document.getElementById('patient-id-search').value;
+            if (!patientId) {
+                alert('환자 ID를 입력하세요');
+                return;
+            }
+
+            if (!confirm(`환자 ${patientId}를 삭제하시겠습니까?`)) {
+                return;
+            }
+
+            await apiRequest('DELETE', `${API_BASE_URL}/patients/${patientId}/`, null, 'patient-crud');
+        }
+
+        // === 진료 (Encounter) ===
+
+        function fillEncounterExample() {
+            document.getElementById('encounter-patient-id').value = 'P-2025-000001';
+            document.getElementById('encounter-doctor-id').value = '8f1035ad-7279-4dd3-89cd-497f002811ec'; // doctor1 UUID
+            document.getElementById('encounter-type').value = 'outpatient';
+            document.getElementById('encounter-department').value = 'Neurosurgery';
+            document.getElementById('encounter-status').value = 'scheduled';
+            document.getElementById('encounter-date').value = new Date().toISOString().slice(0, 16);
+            document.getElementById('encounter-complaint').value = 'Headache and dizziness';
+            document.getElementById('encounter-diagnosis').value = 'Suspected migraine';
+        }
+
+        function clearEncounterForm() {
+            document.getElementById('encounter-patient-id').value = '';
+            document.getElementById('encounter-doctor-id').value = '';
+            document.getElementById('encounter-type').value = '';
+            document.getElementById('encounter-department').value = '';
+            document.getElementById('encounter-status').value = 'scheduled';
+            document.getElementById('encounter-date').value = '';
+            document.getElementById('encounter-complaint').value = '';
+            document.getElementById('encounter-diagnosis').value = '';
+        }
+
+        async function createEncounter() {
+            const data = {
+                patient: document.getElementById('encounter-patient-id').value,
+                doctor_id: document.getElementById('encounter-doctor-id').value,
+                encounter_type: document.getElementById('encounter-type').value,
+                department: document.getElementById('encounter-department').value,
+                status: document.getElementById('encounter-status').value,
+                encounter_date: document.getElementById('encounter-date').value,
+                chief_complaint: document.getElementById('encounter-complaint').value,
+                diagnosis: document.getElementById('encounter-diagnosis').value,
+            };
+
+            await apiRequest('POST', `${API_BASE_URL}/encounters/`, data, 'encounter');
+        }
+
+        async function listEncounters() {
+            await apiRequest('GET', `${API_BASE_URL}/encounters/`, null, 'encounter');
+        }
+
+        // === 처방 (Order) ===
+
+        let orderItemCounter = 0;
+
+        function addOrderItem() {
+            orderItemCounter++;
+            const container = document.getElementById('order-items-container');
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'section';
+            itemDiv.style.marginBottom = '15px';
+            itemDiv.innerHTML = `
+                <h4 style="margin-bottom: 10px;">약물 #${orderItemCounter}</h4>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>약물명 *</label>
+                        <input type="text" class="order-item-drug-name" placeholder="타이레놀정">
+                    </div>
+                    <div class="form-group">
+                        <label>약물 코드</label>
+                        <input type="text" class="order-item-drug-code" placeholder="DRUG001">
+                    </div>
+                    <div class="form-group">
+                        <label>용량 *</label>
+                        <input type="text" class="order-item-dosage" placeholder="1정">
+                    </div>
+                    <div class="form-group">
+                        <label>횟수 *</label>
+                        <input type="text" class="order-item-frequency" placeholder="1일 3회">
+                    </div>
+                    <div class="form-group">
+                        <label>기간 *</label>
+                        <input type="text" class="order-item-duration" placeholder="7일">
+                    </div>
+                    <div class="form-group">
+                        <label>투여 경로 *</label>
+                        <input type="text" class="order-item-route" placeholder="경구">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>복용 지시사항</label>
+                    <textarea class="order-item-instructions" placeholder="식후 30분"></textarea>
+                </div>
+                <button class="btn-danger btn-sm" onclick="this.parentElement.remove()">❌ 삭제</button>
+            `;
+            container.appendChild(itemDiv);
+        }
+
+        function fillOrderExample() {
+            document.getElementById('order-patient-id').value = 'P-2025-000001';
+            document.getElementById('order-encounter-id').value = ''; // Leave empty (nullable)
+            document.getElementById('order-doctor-id').value = '8f1035ad-7279-4dd3-89cd-497f002811ec'; // doctor1 UUID
+            document.getElementById('order-type').value = 'medication';
+            document.getElementById('order-urgency').value = 'routine';
+            document.getElementById('order-status').value = 'pending';
+            document.getElementById('order-notes').value = 'Prescription issued';
+
+            // Add drug item automatically
+            if (orderItemCounter === 0) {
+                addOrderItem();
+                document.querySelector('.order-item-drug-name').value = 'Tylenol 500mg';
+                document.querySelector('.order-item-drug-code').value = 'DRUG001';
+                document.querySelector('.order-item-dosage').value = '1 tablet';
+                document.querySelector('.order-item-frequency').value = '3 times daily';
+                document.querySelector('.order-item-duration').value = '7 days';
+                document.querySelector('.order-item-route').value = 'Oral';
+                document.querySelector('.order-item-instructions').value = '30 min after meal';
+            }
+        }
+
+        function clearOrderForm() {
+            document.getElementById('order-patient-id').value = '';
+            document.getElementById('order-encounter-id').value = '';
+            document.getElementById('order-doctor-id').value = '';
+            document.getElementById('order-type').value = '';
+            document.getElementById('order-urgency').value = 'routine';
+            document.getElementById('order-status').value = 'pending';
+            document.getElementById('order-notes').value = '';
+            document.getElementById('order-items-container').innerHTML = '';
+            orderItemCounter = 0;
+        }
+
+        async function createOrder() {
+            const orderItems = [];
+            document.querySelectorAll('#order-items-container > div').forEach(itemDiv => {
+                orderItems.push({
+                    drug_name: itemDiv.querySelector('.order-item-drug-name').value,
+                    drug_code: itemDiv.querySelector('.order-item-drug-code').value || '',
+                    dosage: itemDiv.querySelector('.order-item-dosage').value,
+                    frequency: itemDiv.querySelector('.order-item-frequency').value,
+                    duration: itemDiv.querySelector('.order-item-duration').value,
+                    route: itemDiv.querySelector('.order-item-route').value,
+                    instructions: itemDiv.querySelector('.order-item-instructions').value || '',
+                });
+            });
+
+            const data = {
+                patient: document.getElementById('order-patient-id').value,
+                encounter: document.getElementById('order-encounter-id').value || null,
+                ordered_by: document.getElementById('order-doctor-id').value,
+                order_type: document.getElementById('order-type').value,
+                urgency: document.getElementById('order-urgency').value,
+                status: document.getElementById('order-status').value,
+                notes: document.getElementById('order-notes').value,
+                order_items: orderItems,
+            };
+
+            await apiRequest('POST', `${API_BASE_URL}/orders/`, data, 'order');
+        }
+
+        async function listOrders() {
+            await apiRequest('GET', `${API_BASE_URL}/orders/`, null, 'order');
+        }
+
+        // === 데이터 조회 ===
+
+        async function listAllPatients() {
+            const response = await apiRequest('GET', `${API_BASE_URL}/patients/`, null, 'list');
+            if (response && Array.isArray(response)) {
+                displayPatientList(response);
+            }
+        }
+
+        async function listAllEncounters() {
+            const response = await apiRequest('GET', `${API_BASE_URL}/encounters/`, null, 'list');
+            if (response && Array.isArray(response)) {
+                displayEncounterList(response);
+            }
+        }
+
+        async function listAllOrders() {
+            const response = await apiRequest('GET', `${API_BASE_URL}/orders/`, null, 'list');
+            if (response && Array.isArray(response)) {
+                displayOrderList(response);
+            }
+        }
+
+        function displayPatientList(patients) {
+            const container = document.getElementById('data-list-container');
+            container.innerHTML = `<h3 style="margin-top: 20px; color: #667eea;">환자 목록 (${patients.length}명)</h3>`;
+
+            patients.forEach(patient => {
+                const item = document.createElement('div');
+                item.className = 'data-item';
+                item.innerHTML = `
+                    <div>
+                        <strong>${patient.patient_id}</strong> - ${patient.full_name}
+                        <span class="badge badge-${patient.gender}">${patient.gender}</span>
+                        <br>
+                        <small>생년월일: ${patient.birth_date} | 전화: ${patient.phone || 'N/A'}</small>
+                    </div>
+                    <div class="item-actions">
+                        <button class="btn-info btn-sm" onclick="viewPatient('${patient.patient_id}')">👁️ 조회</button>
+                        <button class="btn-danger btn-sm" onclick="deletePatientById('${patient.patient_id}')">🗑️ 삭제</button>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function displayEncounterList(encounters) {
+            const container = document.getElementById('data-list-container');
+            container.innerHTML = `<h3 style="margin-top: 20px; color: #667eea;">진료 목록 (${encounters.length}건)</h3>`;
+
+            encounters.forEach(encounter => {
+                const item = document.createElement('div');
+                item.className = 'data-item';
+                item.innerHTML = `
+                    <div>
+                        <strong>${encounter.encounter_id}</strong> - ${encounter.patient_name}
+                        <span class="badge badge-status">${encounter.status}</span>
+                        <br>
+                        <small>${encounter.department} | ${encounter.encounter_type} | ${encounter.encounter_date}</small>
+                    </div>
+                    <div class="item-actions">
+                        <button class="btn-danger btn-sm" onclick="deleteEncounterById('${encounter.encounter_id}')">🗑️ 삭제</button>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function displayOrderList(orders) {
+            const container = document.getElementById('data-list-container');
+            container.innerHTML = `<h3 style="margin-top: 20px; color: #667eea;">처방 목록 (${orders.length}건)</h3>`;
+
+            orders.forEach(order => {
+                const item = document.createElement('div');
+                item.className = 'data-item';
+                item.innerHTML = `
+                    <div>
+                        <strong>${order.order_id}</strong> - ${order.patient_name}
+                        <span class="badge badge-status">${order.status}</span>
+                        <br>
+                        <small>${order.order_type} | ${order.urgency} | 약물 ${order.items.length}개</small>
+                    </div>
+                    <div class="item-actions">
+                        <button class="btn-danger btn-sm" onclick="deleteOrderById('${order.order_id}')">🗑️ 삭제</button>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        async function deletePatientById(patientId) {
+            if (!confirm(`환자 ${patientId}를 삭제하시겠습니까?`)) return;
+            await apiRequest('DELETE', `${API_BASE_URL}/patients/${patientId}/`, null, 'list');
+            listAllPatients();
+        }
+
+        async function deleteEncounterById(encounterId) {
+            if (!confirm(`진료 ${encounterId}를 삭제하시겠습니까?`)) return;
+            await apiRequest('DELETE', `${API_BASE_URL}/encounters/${encounterId}/`, null, 'list');
+            listAllEncounters();
+        }
+
+        async function deleteOrderById(orderId) {
+            if (!confirm(`처방 ${orderId}를 삭제하시겠습니까?`)) return;
+            await apiRequest('DELETE', `${API_BASE_URL}/orders/${orderId}/`, null, 'list');
+            listAllOrders();
+        }
+
+        // === API 요청 함수 ===
+
+        async function apiRequest(method, url, data, section) {
+            const loadingEl = document.getElementById(`${section}-loading`);
+            const responseEl = document.getElementById(`${section}-response`);
+
+            loadingEl.classList.add('active');
+            responseEl.innerHTML = '';
+
+            try {
+                const options = {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                };
+
+                if (data) {
+                    options.body = JSON.stringify(data);
+                }
+
+                const response = await fetch(url, options);
+                const result = response.status === 204 ? {} : await response.json();
+
+                const statusClass = response.ok ? 'status-success' : 'status-error';
+                const statusText = response.ok ? `✅ 성공 (${response.status})` : `❌ 실패 (${response.status})`;
+
+                responseEl.innerHTML = `
+                    <div class="status ${statusClass}">${statusText}</div>
+                    <div class="response">${JSON.stringify(result, null, 2)}</div>
+                `;
+
+                loadingEl.classList.remove('active');
+                return result;
+
+            } catch (error) {
+                responseEl.innerHTML = `
+                    <div class="status status-error">❌ 네트워크 오류</div>
+                    <div class="response">${error.message}</div>
+                `;
+                loadingEl.classList.remove('active');
+            }
+        }
+
+        // 페이지 로드 시 약물 항목 1개 추가
+        window.onload = function() {
+            // 초기화
+        };
+    </script>
+</body>
+</html>

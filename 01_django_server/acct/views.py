@@ -22,6 +22,10 @@ def login(request):
 
     # Service 레이어 사용
     result = AuthService.login(username, password)
+    
+    if 'error' in result:
+        return Response(result, status=status.HTTP_401_UNAUTHORIZED)
+        
     return Response(result)
 
 
