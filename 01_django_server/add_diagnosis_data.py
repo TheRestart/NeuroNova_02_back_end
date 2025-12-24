@@ -54,6 +54,17 @@ diagnosis_data = [
     {"diag_code": "G04.0", "name_ko": "급성 파종성 뇌염", "name_en": "Acute disseminated encephalitis", "category": "감염성뇌질환"},
     {"diag_code": "G04.9", "name_ko": "상세불명의 뇌염, 척수염 및 뇌척수염", "name_en": "Encephalitis, unspecified", "category": "감염성뇌질환"},
 
+    # 기타 신경계 질환
+    {"diag_code": "G47.0", "name_ko": "잠들기 어려운 장애(불면증)", "name_en": "Insomnia", "category": "기타신경계질환"},
+    {"diag_code": "G47.3", "name_ko": "수면무호흡", "name_en": "Sleep apnea", "category": "기타신경계질환"},
+    {"diag_code": "G70.0", "name_ko": "중증 근무력증", "name_en": "Myasthenia gravis", "category": "기타신경계질환"},
+    {"diag_code": "G24.1", "name_ko": "특발성 가족성 근긴장이상", "name_en": "Idiopathic familial dystonia", "category": "기타신경계질환"},
+    {"diag_code": "G50.0", "name_ko": "삼차신경통", "name_en": "Trigeminal neuralgia", "category": "기타신경계질환"},
+    {"diag_code": "G51.0", "name_ko": "벨마비(안면신경마비)", "name_en": "Bell's palsy", "category": "기타신경계질환"},
+    {"diag_code": "G80.0", "name_ko": "경직성 뇌성마비", "name_en": "Spastic cerebral palsy", "category": "기타신경계질환"},
+    {"diag_code": "G12.2", "name_ko": "운동신경세포질환(ALS 등)", "name_en": "Motor neuron disease", "category": "기타신경계질환"},
+    {"diag_code": "G60.0", "name_ko": "유전성 운동 및 감각 신경병증", "name_en": "Hereditary motor and sensory neuropathy", "category": "기타신경계질환"},
+
     # === 호흡계 질환 (J00-J99: 호흡계통의 질환) ===
 
     # 상기도 감염
@@ -114,6 +125,18 @@ diagnosis_data = [
     {"diag_code": "J96.0", "name_ko": "급성 호흡부전", "name_en": "Acute respiratory failure", "category": "호흡부전"},
     {"diag_code": "J96.1", "name_ko": "만성 호흡부전", "name_en": "Chronic respiratory failure", "category": "호흡부전"},
     {"diag_code": "J96.9", "name_ko": "상세불명의 호흡부전", "name_en": "Respiratory failure, unspecified", "category": "호흡부전"},
+
+    # 추가 호흡기 및 상기도 질환
+    {"diag_code": "J30.1", "name_ko": "꽃가루에 의한 알레르기비염", "name_en": "Allergic rhinitis due to pollen", "category": "기타호흡기질환"},
+    {"diag_code": "J32.0", "name_ko": "만성 상악동염", "name_en": "Chronic maxillary sinusitis", "category": "기타호흡기질환"},
+    {"diag_code": "J34.2", "name_ko": "코중격 만곡", "name_en": "Deviated nasal septum", "category": "기타호흡기질환"},
+    {"diag_code": "J35.0", "name_ko": "만성 편도염", "name_en": "Chronic tonsillitis", "category": "기타호흡기질환"},
+    {"diag_code": "J81", "name_ko": "폐부종", "name_en": "Pulmonary edema", "category": "기타호흡기질환"},
+    {"diag_code": "J80", "name_ko": "성인호흡곤란증후군(ARDS)", "name_en": "Adult respiratory distress syndrome", "category": "기타호흡기질환"},
+    {"diag_code": "J82", "name_ko": "달리 분류되지 않은 폐호산구증가증", "name_en": "Pulmonary eosinophilia", "category": "기타호흡기질환"},
+    {"diag_code": "J60", "name_ko": "탄광부진폐증", "name_en": "Coalworker's pneumoconiosis", "category": "진폐증"},
+    {"diag_code": "J67.0", "name_ko": "농부폐", "name_en": "Farmer's lung", "category": "기타호흡기질환"},
+    {"diag_code": "J98.1", "name_ko": "폐허탈(무기폐)", "name_en": "Pulmonary collapse", "category": "기타호흡기질환"},
 ]
 
 def add_diagnosis_master_data():

@@ -8,9 +8,11 @@ class AIJobSerializer(serializers.ModelSerializer):
         fields = [
             'job_id', 'study_id', 'model_type', 'status',
             'result_data', 'error_message',
+            'review_status', 'reviewed_by', 'reviewed_at', 'review_comment',
             'created_at', 'queued_at', 'started_at', 'completed_at'
         ]
         read_only_fields = [
             'job_id', 'status', 'result_data', 'error_message',
+            'review_status', 'reviewed_by', 'reviewed_at', 'review_comment',
             'created_at', 'queued_at', 'started_at', 'completed_at'
         ]

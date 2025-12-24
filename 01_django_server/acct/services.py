@@ -34,7 +34,7 @@ class AlertService:
     @staticmethod
     def send_alert(user_id, message, alert_type='INFO', metadata=None):
         """
-        알림 생성 및 WebSocket 전송
+        특정 사용자에게 알림 생성 및 WebSocket 전송
         """
         if metadata is None:
             metadata = {}
@@ -52,22 +52,51 @@ class AlertService:
             metadata=metadata
         )
 
-        # 2. WebSocket 전송 (Real-time)
+        # 2. WebSocket 전송 (개별 전송)
+        AlertService._broadcast_to_websocket(f"user_{user.username}", message, alert_type, metadata)
+
+        return alert
+
+    @staticmethod
+    def send_role_alert(role, message, alert_type='INFO', metadata=None):
+        """
+        특정 역할을 가진 모든 사용자에게 알림 및 WebSocket 전송
+        (DB 저장은 각 사용자별로 수행하거나, 시스템 알림용 별도 처리가 필요할 수 있음)
+        """
+        if metadata is None:
+            metadata = {}
+
+        users = User.objects.filter(role=role, is_active=True)
+        
+        # 각 사용자별로 DB 저장
+        alerts = []
+        for user in users:
+            alerts.append(Alert(
+                user=user,
+                message=message,
+                type=alert_type,
+                metadata=metadata
+            ))
+        Alert.objects.bulk_create(alerts)
+
+        # WebSocket 전송 (역할 그룹에 한 번만 전송)
+        AlertService._broadcast_to_websocket(f"role_{role}", message, alert_type, metadata)
+        
+        return len(alerts)
+
+    @staticmethod
+    def _broadcast_to_websocket(group_name, message, alert_type, metadata):
+        """Websocket 브로드캐스팅 로직 공통화"""
         try:
             channel_layer = get_channel_layer()
-            group_name = f"user_{user.username}"
-
             async_to_sync(channel_layer.group_send)(
                 group_name,
                 {
-                    'type': 'send_notification',  # api.consumers.NotificationConsumer 내 메서드명
+                    'type': 'send_notification',
                     'message': message,
-                    'alert_type': alert_type,      # 키 이름 중복 방지 (alert_type으로 변경)
+                    'alert_type': alert_type,
                     'metadata': metadata
                 }
             )
         except Exception as e:
-            # WebSocket 전송 실패가 비즈니스 로직을 중단시키지 않도록 예외 처리
-            print(f"WebSocket broadcast failed: {str(e)}")
-
-        return alert
+            print(f"WebSocket broadcast failed for group {group_name}: {str(e)}")

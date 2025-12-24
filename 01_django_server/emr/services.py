@@ -58,6 +58,17 @@ class PatientService:
         if persistence_status["openemr_patient_data"] != "성공" and persistence_status["django_emr_patient_cache"] != "성공":
             raise Exception("모든 데이터베이스 저장에 실패했습니다.")
 
+        # [UC09] 감사 로그
+        from audit.services import AuditService
+        AuditService.log_action(
+            user=None, # 시스템 또는 호출자 주입 필요 (현재 버전은 context 부족시 None)
+            action='CREATE',
+            app_label='emr',
+            model_name='PatientCache',
+            object_id=patient_id,
+            change_summary=f"환자 생성: {patient_id}"
+        )
+
         return patient, persistence_status
 
     @staticmethod
@@ -83,8 +94,17 @@ class PatientService:
                     if not success:
                         raise Exception("데이터 충돌이 발생했습니다. (Optimistic Lock Failure)")
                 else:
-                    # 버전 정보가 없으면 일반 업데이트
-                    PatientCache.objects.filter(patient_id=patient_id).update(**data)
+                    # [UC09] 감사 로그
+                    from audit.services import AuditService
+                    AuditService.log_action(
+                        user=None,
+                        action='UPDATE',
+                        app_label='emr',
+                        model_name='PatientCache',
+                        object_id=patient_id,
+                        change_summary=f"환자 정보 수정: {patient_id}",
+                        current_data=data
+                    )
                 
                 return PatientRepository.get_patient_by_id(patient_id)
 
@@ -186,14 +206,26 @@ class OrderService:
 
         # 항목 ID 생성 및 유효성 검사
         final_items_data = []
+        order_type = order_data.get('order_type')
+        
         for idx, item in enumerate(items_data, 1):
-            drug_code = item.get('drug_code')
-            if drug_code:
-                try:
-                    master = MedicationMaster.objects.get(drug_code=drug_code)
-                    item['drug_name'] = master.drug_name
-                except MedicationMaster.DoesNotExist:
-                    raise Exception(f"유효하지 않은 약물 코드입니다: {drug_code}")
+            code = item.get('drug_code') or item.get('test_code')
+            if code:
+                if order_type == 'medication':
+                    try:
+                        master = MedicationMaster.objects.get(drug_code=code)
+                        item['drug_name'] = master.drug_name
+                        item['drug_code'] = code # drug_code로 통일
+                    except MedicationMaster.DoesNotExist:
+                        raise Exception(f"유효하지 않은 약물 코드입니다: {code}")
+                elif order_type == 'lab':
+                    from lis.models import LabTestMaster
+                    try:
+                        master = LabTestMaster.objects.get(test_code=code)
+                        item['drug_name'] = master.test_name # drug_name 필드를 test_name 용도로 공유 (OrderItem 모델 구조상)
+                        item['drug_code'] = code
+                    except LabTestMaster.DoesNotExist:
+                        raise Exception(f"유효하지 않은 검사 코드입니다: {code}")
 
             item_id = f'OI-{order_id}-{idx:03d}'
             item['item_id'] = item_id
@@ -259,6 +291,17 @@ class OrderService:
                     )
                 except Exception as alert_err:
                     logger.warning(f"Failed to send order execution alert: {str(alert_err)}")
+
+                # [UC09] 감사 로그
+                from audit.services import AuditService
+                AuditService.log_action(
+                    user=None,
+                    action='EXECUTE',
+                    app_label='ocs',
+                    model_name='Order',
+                    object_id=order_id,
+                    change_summary=f"처방 실행 완료: {order_id}"
+                )
 
                 return OrderRepository.get_order_by_id(order_id)
         except Exception as e:

@@ -38,6 +38,8 @@ class LabResult(models.Model):
     result_value = models.CharField(max_length=100, help_text="검사 결과값 (수치 또는 텍스트)")
     result_unit = models.CharField(max_length=50, blank=True, null=True, help_text="결과 단위")
     
+    result_details = models.JSONField(blank=True, null=True, help_text="상세 결과 데이터 (JSON)")
+    
     is_abnormal = models.BooleanField(default=False, help_text="이상치 여부")
     abnormal_flag = models.CharField(max_length=10, blank=True, null=True, help_text="이상치 플래그 (H: High, L: Low, etc.)")
     

@@ -209,7 +209,8 @@ class PatientRepository:
     @staticmethod
     def create_patient(data):
         """환자 생성"""
-        return PatientCache.objects.create(**data)
+        patient_id = data.pop('patient_id', None)
+        return PatientCache.objects.create(patient_id=patient_id, **data)
 
     @staticmethod
     def get_patient_by_id(patient_id, for_update=False):

@@ -1,0 +1,70 @@
+import os
+path = 'templates/audit/log_viewer.html'
+content = """<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuroNova CDSS - 감사 로그 뷰어</title>
+    <style>
+        :root { --primary: #2563eb; --bg: #f8fafc; --text: #1e293b; --border: #e2e8f0; }
+        body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 24px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        h1 { margin: 0; font-size: 24px; color: var(--primary); }
+        .filters { display: flex; gap: 12px; background: white; padding: 16px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 24px; }
+        .filters select, .filters button { padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; background: white; }
+        .filters button { background: var(--primary); color: white; border: none; cursor: pointer; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--border); }
+        th { background-color: #f1f5f9; font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; }
+        tr:hover { background-color: #f8fafc; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+        .badge-create { background: #dcfce7; color: #166534; }
+        .badge-update { background: #fef9c3; color: #854d0e; }
+        .badge-delete { background: #fee2e2; color: #991b1b; }
+        .badge-execute { background: #e0e7ff; color: #3730a3; }
+        pre { max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin: 0; font-size: 11px; color: #64748b; }
+        .empty { text-align: center; padding: 48px; color: #94a3b8; }
+    </style>
+</head>
+<body>
+    <div class="header"><h1>시스템 감사 로그 (Audit Logs)</h1><div>총 <strong>{{ count }}</strong>개의 최근 로그</div></div>
+    <form class="filters" method="get">
+        <select name="app">
+            <option value="">모든 앱</option>
+            {% for a_item in apps %}
+            <option value="{{ a_item }}" {% if request.GET.app == a_item %}selected{% endif %}>{{ a_item }}</option>
+            {% endfor %}
+        </select>
+        <select name="action">
+            <option value="">모든 액션</option>
+            {% for act_item in actions %}
+            <option value="{{ act_item }}" {% if request.GET.action == act_item %}selected{% endif %}>{{ act_item }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit">필터 적용</button>
+        <a href="?"><button type="button" style="background: #64748b;">초기화</button></a>
+    </form>
+    <table>
+        <thead><tr><th>일시</th><th>사용자</th><th>앱/모델</th><th>액션</th><th>요약</th><th>아이피</th><th>상세정보</th></tr></thead>
+        <tbody>
+            {% for log in logs %}
+            <tr>
+                <td style="font-size: 12px; color: #64748b;">{{ log.created_at|date:"Y-m-d H:i:s" }}</td>
+                <td>{{ log.user.username|default:"System" }}</td>
+                <td style="font-size: 12px;">{{ log.app_label }}.{{ log.model_name }}</td>
+                <td><span class="badge badge-{{ log.action|lower }}">{{ log.action }}</span></td>
+                <td>{{ log.change_summary|default:"-" }}</td>
+                <td style="font-size: 11px; color: #94a3b8;">{{ log.ip_address }}</td>
+                <td>{% if log.current_data %}<pre title="{{ log.current_data }}">{{ log.current_data }}</pre>{% else %}-{% endif %}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7" class="empty">기록된 로그가 없습니다.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>"""
+with open(path, 'w', encoding='utf-8') as f:
+    f.write(content)
+print("File written successfully.")

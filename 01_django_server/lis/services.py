@@ -58,6 +58,10 @@ class LabResultService:
         data['is_abnormal'] = is_abnormal
         data['abnormal_flag'] = abnormal_flag
 
+        # 3. 상세 결과가 있으면 result_details에 저장 (데이터 보존)
+        if 'results' in data and not data.get('result_details'):
+            data['result_details'] = data.pop('results')
+
         try:
             with transaction.atomic():
                 # 결과 생성
@@ -79,6 +83,18 @@ class LabResultService:
                             'order_id': order.order_id
                         }
                     )
+                
+                # [UC09] 감사 로그
+                from audit.services import AuditService
+                AuditService.log_action(
+                    user=None,
+                    action='CREATE',
+                    app_label='lis',
+                    model_name='LabResult',
+                    object_id=result_id,
+                    change_summary=f"검사 결과 등록: {test_master.test_name} ({result_value})",
+                    current_data=data
+                )
                 
                 return result
 

@@ -12,23 +12,25 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             return
 
         # 사용자별 그룹 이름 생성 (예: user_1234)
-        self.group_name = f"user_{self.user.username}"
+        self.user_group = f"user_{self.user.username}"
+        await self.channel_layer.group_add(self.user_group, self.channel_name)
 
-        # 그룹에 추가
-        await self.channel_layer.group_add(
-            self.group_name,
-            self.channel_name
-        )
+        # 역할별 그룹 이름 생성 (예: role_doctor)
+        if hasattr(self.user, 'role') and self.user.role:
+            self.role_group = f"role_{self.user.role}"
+            await self.channel_layer.group_add(self.role_group, self.channel_name)
+        else:
+            self.role_group = None
 
         await self.accept()
 
     async def disconnect(self, close_code):
         # 그룹에서 제거
-        if hasattr(self, 'group_name'):
-            await self.channel_layer.group_discard(
-                self.group_name,
-                self.channel_name
-            )
+        if hasattr(self, 'user_group'):
+            await self.channel_layer.group_discard(self.user_group, self.channel_name)
+        
+        if getattr(self, 'role_group', None):
+            await self.channel_layer.group_discard(self.role_group, self.channel_name)
 
     async def receive(self, text_data):
         # 클라이언트로부터 메시지 수신 (필요 시 처리)

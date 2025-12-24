@@ -21,6 +21,19 @@ class AIJob(models.Model):
     result_data = models.JSONField(null=True, blank=True, help_text="AI 분석 결과")
     error_message = models.TextField(blank=True, help_text="실패 시 에러 메시지")
     
+    # 의료진 검토 (Review/Approval)
+    REVIEW_CHOICES = [
+        ('PENDING', 'Pending'),
+        ('APPROVED', 'Approved'),
+        ('REJECTED', 'Rejected'),
+    ]
+    review_status = models.CharField(max_length=20, choices=REVIEW_CHOICES, default='PENDING')
+    reviewed_by = models.ForeignKey(
+        'acct.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='reviewed_ai_jobs'
+    )
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    review_comment = models.TextField(blank=True, help_text="의료진 검토 의견")
+    
     # 타임스탬프
     created_at = models.DateTimeField(auto_now_add=True)
     queued_at = models.DateTimeField(null=True, blank=True, help_text="RabbitMQ 큐 추가 시간")

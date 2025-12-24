@@ -7,5 +7,6 @@ router.register(r'jobs', views.AIJobViewSet, basename='ai-job')
 
 urlpatterns = [
     path('submit/', views.submit_ai_job, name='submit-ai-job'),
+    path('callback/', views.ai_callback, name='ai-callback'),
     path('', include(router.urls)),
 ]
