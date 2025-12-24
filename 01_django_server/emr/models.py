@@ -185,6 +185,7 @@ class EncounterDiagnosis(models.Model):
     diag_code = models.CharField(max_length=20, help_text="질병 코드 (ICD-10/KCD)")
     diagnosis_name = models.CharField(max_length=255, help_text="진단명 (한글/영문)")
     priority = models.IntegerField(default=1, help_text="진단 우선순위 (1: 주진단, 2 이상: 부진단)")
+    comments = models.TextField(blank=True, null=True, help_text="진단 상세 설명/메모")
     version = models.IntegerField(default=1, help_text="낙관적 락을 위한 버전 필드")
     created_at = models.DateTimeField(auto_now_add=True)
 

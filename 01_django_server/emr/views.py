@@ -53,7 +53,7 @@ def comprehensive_test(request):
     모든 EMR CRUD, OpenEMR 연동, Write-Through 패턴을 통합한 테스트 페이지
     """
     from django.shortcuts import render
-    return render(request, 'emr/test_dashboard.html')
+    return render(request, 'emr/comprehensive_crud_test.html')
 
 
 @require_http_methods(["GET"])
@@ -90,6 +90,26 @@ def get_patient(request, patient_id):
     else:
         return JsonResponse({
             "error": "Patient not found"
+        }, status=404)
+
+@require_http_methods(["GET"])
+def verify_emr_data(request, patient_id):
+    """OpenEMR DB 직접 조회를 통한 데이터 저장 검증 (Proof)"""
+    from .repositories import OpenEMRPatientRepository
+    
+    emr_data = OpenEMRPatientRepository.get_patient_by_pubpid(patient_id)
+    
+    if emr_data:
+        return JsonResponse({
+            "status": "Verified",
+            "source": "OpenEMR (emr_db.patient_data)",
+            "verified_at": datetime.now().isoformat(),
+            "emr_entry": emr_data
+        })
+    else:
+        return JsonResponse({
+            "status": "Failed",
+            "message": "OpenEMR 데이터베이스에 해당 데이터가 존재하지 않습니다."
         }, status=404)
 
 

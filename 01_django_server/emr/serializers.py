@@ -40,7 +40,7 @@ class EncounterDiagnosisSerializer(serializers.ModelSerializer):
     """진료 진단 시리얼라이저"""
     class Meta:
         model = EncounterDiagnosis
-        fields = ['diag_code', 'diagnosis_name', 'priority', 'created_at']
+        fields = ['diag_code', 'diagnosis_name', 'comments', 'priority', 'created_at']
 
 
 class EncounterSerializer(serializers.ModelSerializer):
@@ -63,8 +63,8 @@ class EncounterSerializer(serializers.ModelSerializer):
 
 class EncounterCreateSerializer(serializers.ModelSerializer):
     """진료 기록 생성 시리얼라이저"""
-    diagnosis_codes = serializers.ListField(
-        child=serializers.CharField(),
+    diagnoses = serializers.ListField(
+        child=serializers.DictField(),
         write_only=True,
         required=False
     )
@@ -73,7 +73,7 @@ class EncounterCreateSerializer(serializers.ModelSerializer):
         model = Encounter
         fields = [
             'patient', 'doctor_id', 'encounter_type', 'department',
-            'chief_complaint', 'diagnosis', 'diagnosis_codes', 'status', 'encounter_date'
+            'chief_complaint', 'diagnosis', 'diagnoses', 'status', 'encounter_date'
         ]
 
 

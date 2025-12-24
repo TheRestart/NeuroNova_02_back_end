@@ -168,6 +168,9 @@
                                                 <button class="btn btn-light"
                                                     onclick="apiCall('GET', '/api/emr/patients/')"><i
                                                         class="fas fa-list"></i></button>
+                                                <button id="verify-emr-btn" class="btn btn-outline-danger"
+                                                    style="display:none;" onclick="verifyInEMR()"><i
+                                                        class="fas fa-database me-1"></i>EMR 검증</button>
                                             </div>
                                         </div>
                                     </div>
@@ -178,27 +181,49 @@
                         <!-- Encounter Section -->
                         <section id="encounter-sec" class="mb-5">
                             <div class="card border-info">
-                                <div class="card-header text-info"><i class="fas fa-file-medical me-2"></i>UC02: 진료 및 진단
-                                    등록 (Master Data Mapping)</div>
+                                <div class="card-header text-info d-flex justify-content-between">
+                                    <span><i class="fas fa-file-medical me-2"></i>UC02: 진료 및 진단 등록 (Detailed)</span>
+                                    <button class="btn btn-outline-info btn-sm" onclick="addDiagnosisRow()"><i
+                                            class="fas fa-plus me-1"></i>진단 추가</button>
+                                </div>
                                 <div class="card-body">
                                     <div class="mb-3">
                                         <label class="form-label small fw-bold">환자 ID</label>
                                         <input type="text" id="e-pid" class="form-control form-control-sm"
                                             placeholder="P-2025-XXXXXX">
                                     </div>
-                                    <div class="mb-3">
-                                        <label class="form-label small fw-bold">진단 코드 (DiagnosisMaster에서 검색)</label>
-                                        <div class="input-group">
-                                            <input type="text" id="e-diag-code" class="form-control" placeholder="J00">
-                                            <button class="btn btn-outline-info"
-                                                onclick="searchMaster('diagnoses', 'e-diag-code')"><i
-                                                    class="fas fa-search"></i></button>
+
+                                    <div id="diagnosis-list">
+                                        <!-- Diagnosis Row Template -->
+                                        <div class="diagnosis-row border rounded p-3 mb-3 bg-light">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <span class="badge bg-info">진단 #1</span>
+                                                <button class="btn btn-link btn-sm text-danger p-0"
+                                                    onclick="this.closest('.diagnosis-row').remove()"><i
+                                                        class="fas fa-times"></i></button>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label small fw-bold text-secondary">질병 코드</label>
+                                                <div class="input-group">
+                                                    <input type="text" class="form-control diag-code"
+                                                        placeholder="ICD-10 코드">
+                                                    <button class="btn btn-outline-info"
+                                                        onclick="searchMasterForSpecificRow(this)"><i
+                                                            class="fas fa-search"></i></button>
+                                                </div>
+                                            </div>
+                                            <div class="mb-0">
+                                                <label class="form-label small fw-bold text-secondary">진단 상세
+                                                    정보/메모</label>
+                                                <textarea class="form-control diag-comments" rows="2"
+                                                    placeholder="상세 증상이나 메모를 입력하세요..."></textarea>
+                                            </div>
                                         </div>
-                                        <small class="text-muted">예: J00 (급성 비인두염), I10 (본태성 고혈압)</small>
                                     </div>
-                                    <button class="btn btn-info text-white w-100"
-                                        onclick="apiCall('POST', '/api/emr/encounters/', getEncounterData())">진료 및 구조화된
-                                        진단 저장</button>
+
+                                    <button class="btn btn-info text-white w-100 mt-2"
+                                        onclick="apiCall('POST', '/api/emr/encounters/', getEncounterData())">진료 및 다중 진단
+                                        저장</button>
                                 </div>
                             </div>
                         </section>
@@ -320,6 +345,14 @@
         const masterModal = new bootstrap.Modal(document.getElementById('masterModal'));
 
         // --- Core API Caller ---
+        const tableMap = {
+            '/api/emr/patients/': 'emr_patient_cache (Django) & patient_data (OpenEMR)',
+            '/api/emr/encounters/': 'emr_encounters & emr_encounter_diagnoses',
+            '/api/emr/orders/': 'emr_orders & emr_order_items',
+            '/api/lis/results/': 'lis_lab_results',
+            '/api/audit/logs/': 'audit_logs'
+        };
+
         async function apiCall(method, url, data = null) {
             consoleEl.innerHTML = "Processing...";
             statusEl.innerText = "";
@@ -337,14 +370,38 @@
 
                 const result = response.status !== 204 ? await response.json() : { "message": "Deleted successfully" };
 
-                consoleEl.innerHTML = JSON.stringify(result, null, 2);
+                // Get table info
+                let targetTables = "Unknown";
+                for (let key in tableMap) {
+                    if (url.startsWith(key)) {
+                        targetTables = tableMap[key];
+                        break;
+                    }
+                }
+
+                // Check for OpenEMR Proof (from structured data if present)
+                const dataObj = result.data || result;
+                let emrProofHeader = "";
+                if (dataObj.openemr_patient_id) {
+                    emrProofHeader = `\n/* ✅ OpenEMR Persistence Verified! Internal PID: ${dataObj.openemr_patient_id} */\n`;
+                }
+
+                consoleEl.innerHTML = `/* Target Tables: ${targetTables} */${emrProofHeader}\n` + JSON.stringify(result, null, 2);
                 statusEl.innerText = `${method} ${url} | ${response.status} | ${duration}ms`;
 
                 // Auto-propagate IDs
                 if (response.ok) {
-                    if (result.patient_id) document.getElementById('e-pid').value = result.patient_id;
-                    if (result.encounter_id) document.getElementById('o-eid').value = result.encounter_id;
-                    if (result.order_id) document.getElementById('l-oid').value = result.order_id;
+                    if (dataObj.patient_id) {
+                        document.getElementById('e-pid').value = dataObj.patient_id;
+                        // Show verification button for patient
+                        const vBtn = document.getElementById('verify-emr-btn');
+                        if (vBtn) {
+                            vBtn.style.display = 'block';
+                            vBtn.dataset.pid = dataObj.patient_id;
+                        }
+                    }
+                    if (dataObj.encounter_id) document.getElementById('o-eid').value = dataObj.encounter_id;
+                    if (dataObj.order_id) document.getElementById('l-oid').value = dataObj.order_id;
 
                     // Refresh audit logs after a short delay
                     setTimeout(loadAuditLogs, 500);
@@ -352,6 +409,14 @@
             } catch (err) {
                 consoleEl.innerHTML = `ERROR: ${err.message}`;
             }
+        }
+
+        async function verifyInEMR() {
+            const btn = document.getElementById('verify-emr-btn');
+            const pid = btn.dataset.pid;
+            if (!pid) return;
+
+            apiCall('GET', `/api/emr/openemr/verify-emr/${pid}/`);
         }
 
         function clearResults() {
@@ -372,25 +437,79 @@
             };
         }
 
+        // --- Encounter Helpers ---
+        function addDiagnosisRow() {
+            const list = document.getElementById('diagnosis-list');
+            const rowCount = list.getElementsByClassName('diagnosis-row').length + 1;
+            const newRow = document.createElement('div');
+            newRow.className = 'diagnosis-row border rounded p-3 mb-3 bg-light';
+            newRow.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="badge bg-info">진단 #${rowCount}</span>
+                    <button class="btn btn-link btn-sm text-danger p-0" onclick="this.closest('.diagnosis-row').remove()"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-secondary">질병 코드</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control diag-code" placeholder="ICD-10 코드">
+                        <button class="btn btn-outline-info" onclick="searchMasterForSpecificRow(this)"><i class="fas fa-search"></i></button>
+                    </div>
+                </div>
+                <div class="mb-0">
+                    <label class="form-label small fw-bold text-secondary">진단 상세 정보/메모</label>
+                    <textarea class="form-control diag-comments" rows="2" placeholder="상세 증상이나 메모를 입력하세요..."></textarea>
+                </div>
+            `;
+            list.appendChild(newRow);
+        }
+
+        function searchMasterForSpecificRow(btn) {
+            const input = btn.closest('.input-group').querySelector('.diag-code');
+            // Give it a temporary ID if it doesn't have one to reuse searchMaster logic
+            if (!input.id) input.id = 'temp-diag-id-' + Date.now();
+            searchMaster('diagnoses', input.id);
+        }
+
         function getEncounterData() {
+            const pid = document.getElementById('e-pid').value;
+            const rows = document.getElementsByClassName('diagnosis-row');
+
+            const diagnoses = [];
+            for (let row of rows) {
+                const diag_code = row.querySelector('.diag-code').value;
+                const comments = row.querySelector('.diag-comments').value;
+                if (diag_code) {
+                    diagnoses.push({ diag_code, comments });
+                }
+            }
+
+            if (!pid || diagnoses.length === 0) {
+                alert("환자 ID와 최소 하나 이상의 진단 코드가 필요합니다.");
+                return null;
+            }
+
             return {
-                patient: document.getElementById('e-pid').value,
+                patient: pid,
                 doctor_id: "test-doc-001",
                 encounter_type: "outpatient",
                 department: "내과",
                 encounter_date: new Date().toISOString(),
-                diagnosis_codes: [document.getElementById('e-diag-code').value]
+                diagnoses: diagnoses
             };
         }
 
         function getOrderData() {
+            const pid = document.getElementById('e-pid').value;
+            const eid = document.getElementById('o-eid').value;
+            const code = document.getElementById('o-drug-code').value;
+            if (!pid || !eid || !code) { alert("환자 ID, 진료 ID, 약품 코드가 필요합니다."); return null; }
             return {
-                patient: document.getElementById('e-pid').value,
-                encounter: document.getElementById('o-eid').value,
+                patient: pid,
+                encounter: eid,
                 ordered_by: "test-doc-001",
                 order_type: "medication",
                 order_items: [{
-                    drug_code: document.getElementById('o-drug-code').value,
+                    drug_code: code,
                     drug_name: "Auto-Filled Name",
                     dosage: "1정",
                     frequency: "1일 3회",
@@ -401,11 +520,16 @@
         }
 
         function getLabData() {
+            const oid = document.getElementById('l-oid').value;
+            const pid = document.getElementById('e-pid').value;
+            const code = document.getElementById('l-test-code').value;
+            const val = document.getElementById('l-value').value;
+            if (!oid || !pid || !code || !val) { alert("모든 필드를 입력하세요."); return null; }
             return {
-                order: document.getElementById('l-oid').value,
-                patient: document.getElementById('e-pid').value,
-                test_master: document.getElementById('l-test-code').value,
-                result_value: document.getElementById('l-value').value,
+                order: oid,
+                patient: pid,
+                test_master: code,
+                result_value: val,
                 result_unit: "mg/dL",
                 reported_by: "tech-001"
             };

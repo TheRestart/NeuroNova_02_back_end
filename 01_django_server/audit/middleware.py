@@ -50,7 +50,6 @@ class AuditMiddleware:
                 action=action,
                 app_label=app_label,
                 model_name=model_name,
-                path=request.path,
                 request=request
             )
 

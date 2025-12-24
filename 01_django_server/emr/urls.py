@@ -18,6 +18,7 @@ urlpatterns = [
     path('openemr/patients/', views.list_patients, name='list_patients'),
     path('openemr/patients/search/', views.search_patients, name='search_patients'),
     path('openemr/patients/<str:patient_id>/', views.get_patient, name='get_patient'),
+    path('openemr/verify-emr/<str:patient_id>/', views.verify_emr_data, name='verify_emr_data'),
 
     # CRUD API (ViewSets)
     path('', include(router.urls)),

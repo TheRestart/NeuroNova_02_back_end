@@ -57,11 +57,14 @@ class PatientCacheViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
 
         # Service 레이어에서 ID 자동 생성
-        patient = PatientService.create_patient(serializer.validated_data)
+        patient, status = PatientService.create_patient(serializer.validated_data)
 
         # 응답용 Serializer
         response_serializer = PatientCacheSerializer(patient)
-        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+        return Response({
+            "data": response_serializer.data,
+            "persistence_status": status
+        }, status=status.HTTP_201_CREATED)
 
     def partial_update(self, request, *args, **kwargs):
         """
@@ -184,11 +187,14 @@ class EncounterViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
 
         # Service 레이어에서 ID 자동 생성
-        encounter = EncounterService.create_encounter(serializer.validated_data)
+        encounter, status = EncounterService.create_encounter(serializer.validated_data)
 
         # 응답용 Serializer
         response_serializer = EncounterSerializer(encounter)
-        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+        return Response({
+            "data": response_serializer.data,
+            "persistence_status": status
+        }, status=status.HTTP_201_CREATED)
 
     @action(detail=False, methods=['get'])
     def by_patient(self, request):
@@ -233,11 +239,14 @@ class OrderViewSet(viewsets.ModelViewSet):
         items_data = order_data.pop('order_items', [])
 
         # Service 레이어에서 ID 자동 생성
-        order = OrderService.create_order(order_data, items_data)
+        order, status = OrderService.create_order(order_data, items_data)
 
         # 응답용 Serializer
         response_serializer = OrderSerializer(order)
-        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+        return Response({
+            "data": response_serializer.data,
+            "persistence_status": status
+        }, status=status.HTTP_201_CREATED)
 
     @action(detail=False, methods=['get'])
     def by_patient(self, request):

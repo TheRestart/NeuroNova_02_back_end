@@ -151,6 +151,58 @@ class OpenEMRPatientRepository:
             return None
 
 
+class OpenEMREncounterRepository:
+    """OpenEMR encounters 및 forms 테이블 직접 접근"""
+
+    @staticmethod
+    def create_encounter_in_openemr(data):
+        """
+        OpenEMR에 진료기록 등록
+        """
+        patient_id = data.get('patient')
+        if hasattr(patient_id, 'patient_id'):
+            patient_id = patient_id.patient_id
+        
+        patient_info = OpenEMRPatientRepository.get_patient_by_pubpid(str(patient_id))
+        if not patient_info:
+            raise Exception(f"OpenEMR에서 환자를 찾을 수 없습니다: {patient_id}")
+        
+        pid = patient_info['pid']
+        now = datetime.now()
+
+        with connections['openemr'].cursor() as cursor:
+            # 1. encounters 테이블 insert
+            # OpenEMR encounters 테이블은 보통 encounter_id가 자동 생성되거나 id로 관리됨
+            # 여기서는 표준 필드들만 채움
+            sql_enc = """
+                INSERT INTO encounters (
+                    date, reason, facility_id, pid, encounter,
+                    last_level_all, last_level_closed
+                ) VALUES (
+                    %s, %s, %s, %s, %s, 0, 0
+                )
+            """
+            # encounter 번호는 보통 1부터 시작하는 sequence이거나 id임. 
+            # OpenEMR 버전에 따라 다를 수 있으나, 일단 시퀀스 조회
+            cursor.execute("SELECT MAX(encounter) FROM encounters WHERE pid = %s", [pid])
+            res = cursor.fetchone()
+            new_enc_no = (res[0] if res and res[0] else 0) + 1
+
+            cursor.execute(sql_enc, [now, data.get('chief_complaint', ''), 1, pid, new_enc_no])
+            
+            # 2. forms 테이블 (진료 기록의 메타데이터)
+            sql_form = """
+                INSERT INTO forms (
+                    date, encounter, form_name, form_id, pid, user, groupname, authorized
+                ) VALUES (
+                    %s, %s, 'New Patient Encounter', %s, %s, %s, 'Default', 1
+                )
+            """
+            cursor.execute(sql_form, [now, new_enc_no, new_enc_no, pid, 'admin'])
+            
+            return new_enc_no
+
+
 class PatientRepository:
     """환자 데이터 저장소"""
 
