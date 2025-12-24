@@ -37,7 +37,7 @@ class NotificationConsumer(AsyncWebsocketConsumer):
     # 그룹 메시지 핸들러
     async def send_notification(self, event):
         message = event['message']
-        alert_type = event.get('type', 'INFO')
+        alert_type = event.get('alert_type', 'INFO')
         metadata = event.get('metadata', {})
 
         # WebSocket으로 전송

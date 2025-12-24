@@ -139,6 +139,14 @@
                         <small id="last-status" class="text-secondary"></small>
                     </div>
                     <div id="global-console" class="result-panel">Waiting for operations...</div>
+                    <div id="ws-status" class="mt-2 small text-muted px-3 pb-2"><i
+                            class="fas fa-circle text-danger me-1"></i>WebSocket: Disconnected</div>
+                </div>
+
+                <!-- Toast Container -->
+                <div class="toast-container position-fixed bottom-0 end-0 p-3" id="toastPlacement"
+                    style="z-index: 9999;">
+                    <!-- Toasts will appear here -->
                 </div>
 
                 <div class="row">
@@ -490,7 +498,7 @@
 
             return {
                 patient: pid,
-                doctor_id: "test-doc-001",
+                doctor_id: "8f1035ad-7279-4dd3-89cd-497f002811ec",
                 encounter_type: "outpatient",
                 department: "내과",
                 encounter_date: new Date().toISOString(),
@@ -506,7 +514,7 @@
             return {
                 patient: pid,
                 encounter: eid,
-                ordered_by: "test-doc-001",
+                ordered_by: "8f1035ad-7279-4dd3-89cd-497f002811ec",
                 order_type: "medication",
                 order_items: [{
                     drug_code: code,
@@ -623,6 +631,93 @@
 
         // Initial Load
         loadAuditLogs();
+
+        // --- WebSocket / Real-time Alerts (UC07) ---
+        let socket = null;
+
+        function connectWebSocket() {
+            const username = prompt("WebSocket에 연결할 Username을 입력하세요 (예: doctor1):", "doctor1");
+            if (!username) return;
+
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws/notifications/`;
+
+            // Note: Since ENABLE_SECURITY=False, we rely on session or a custom mechanism.
+            // In a real app, JWT would be passed in protocol or cookie.
+            // For this test dashboard, we assume session exists or AuthMiddlewareStack is active.
+
+            socket = new WebSocket(wsUrl);
+
+            socket.onopen = (e) => {
+                console.log("WebSocket connected");
+                document.getElementById('ws-status').innerHTML = `<i class="fas fa-circle text-success me-1"></i>WebSocket: Connected as ${username} (Session dependent)`;
+                showToast("시스템 알림", "WebSocket 연결에 성공했습니다.", "SUCCESS");
+            };
+
+            socket.onmessage = (e) => {
+                const data = JSON.parse(e.data);
+                console.log("Notification received:", data);
+                showToast(`[${data.type}] 알림`, data.message, data.type);
+
+                // Highlight console
+                consoleEl.innerHTML = `\n/* 🔔 REAL-TIME ALERT RECEIVED! */\n` + JSON.stringify(data, null, 2) + `\n\n` + consoleEl.innerHTML;
+            };
+
+            socket.onclose = (e) => {
+                console.log("WebSocket closed");
+                document.getElementById('ws-status').innerHTML = `<i class="fas fa-circle text-danger me-1"></i>WebSocket: Disconnected`;
+                setTimeout(connectWebSocket, 5000); // Reconnect attempt
+            };
+
+            socket.onerror = (err) => {
+                console.error("WebSocket Error:", err);
+            };
+        }
+
+        function showToast(title, message, type) {
+            const container = document.getElementById('toastPlacement');
+            const toastId = 'toast-' + Date.now();
+            let bgColor = 'bg-primary';
+            let icon = 'fa-info-circle';
+
+            if (type === 'CRITICAL' || type === 'ERROR' || type === 'WARNING') {
+                bgColor = 'bg-danger';
+                icon = 'fa-exclamation-triangle';
+            } else if (type === 'SUCCESS') {
+                bgColor = 'bg-success';
+                icon = 'fa-check-circle';
+            }
+
+            const toastHtml = `
+                <div id="${toastId}" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="toast-header ${bgColor} text-white">
+                        <i class="fas ${icon} me-2"></i>
+                        <strong class="me-auto">${title}</strong>
+                        <small>Just now</small>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                    <div class="toast-body">
+                        ${message}
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', toastHtml);
+            const toastEl = document.getElementById(toastId);
+            const toast = new bootstrap.Toast(toastEl, { autohide: true, delay: 10000 });
+            toast.show();
+
+            // Remove from DOM after hide
+            toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
+        }
+
+        // Add Connect Button to Sidebar or Header? Let's add it next to results
+        const statusHeader = document.querySelector('.d-flex.justify-content-between.align-items-center.mb-4');
+        const wsBtn = document.createElement('button');
+        wsBtn.className = 'btn btn-outline-info btn-sm ms-2';
+        wsBtn.innerHTML = '<i class="fas fa-plug me-1"></i>Connect Real-time';
+        wsBtn.onclick = connectWebSocket;
+        statusHeader.querySelector('.d-flex').appendChild(wsBtn);
+
     </script>
 
 </body>

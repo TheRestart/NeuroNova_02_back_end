@@ -28,12 +28,14 @@ NeuroNova 프로젝트의 Django REST API 백엔드 서버입니다.
 
 ## ⚡ 현재 개발 상태 (2025-12-24)
 
-### AI 코어 개발 단계 (Week 5-12)
-현재는 **AI 코어 모델 개발**에 집중하고 있으며, Flask AI Serving 통합은 **Week 13**에 진행합니다.
+### Django Backend CRUD 고도화 (Week 5-12)
+현재는 **데이터 충돌 없는 CRUD 구현**에 집중하고 있습니다.
 
-**AI 개발자는 이 디렉토리를 수정할 필요 없음**
-- AI 코어: `../05_ai_core/` 디렉토리에서 독립 개발
-- Backend Serving: Week 13 통합 시 Flask API로 연결
+**Django Backend 개발자 (본인)의 작업 영역**
+- ✅ 이 디렉토리: `01_django_server/` - Django REST API 개발
+- ✅ 데이터 충돌 방지: Optimistic/Pessimistic Locking
+- ✅ Transaction 관리 및 동시성 제어
+- ❌ AI 코어: `../05_ai_core/` - 타 팀원 담당 (수정 금지)
 
 ---
 

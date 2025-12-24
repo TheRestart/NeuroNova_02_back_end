@@ -55,7 +55,7 @@ class PatientService:
             persistence_status["django_emr_patient_cache"] = f"실패: {str(e)}"
 
         # 만약 둘 다 실패했다면 예외 던짐
-        if persistence_status["openemr"] != "성공" and persistence_status["django"] != "성공":
+        if persistence_status["openemr_patient_data"] != "성공" and persistence_status["django_emr_patient_cache"] != "성공":
             raise Exception("모든 데이터베이스 저장에 실패했습니다.")
 
         return patient, persistence_status
@@ -160,7 +160,7 @@ class EncounterService:
         except Exception as e:
             persistence_status["django_emr_encounters,django_emr_encounter_diagnoses"] = f"실패: {str(e)}"
 
-        if persistence_status["openemr"] != "성공" and persistence_status["django"] != "성공":
+        if persistence_status["openemr_encounters,openemr_forms"] != "성공" and persistence_status["django_emr_encounters,django_emr_encounter_diagnoses"] != "성공":
             raise Exception("모든 데이터베이스 저장에 실패했습니다.")
 
         return encounter, persistence_status

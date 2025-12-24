@@ -18,6 +18,7 @@ class LabResultService:
         order = data.get('order')
         test_master = data.get('test_master')
         result_value = data.get('result_value')
+        result_unit = data.get('result_unit')
         
         # 1. ID 자동 생성 (LR-YYYY-NNNNNN)
         year = datetime.now().year
