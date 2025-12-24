@@ -160,9 +160,22 @@ class PatientRepository:
         return PatientCache.objects.create(**data)
 
     @staticmethod
-    def get_patient_by_id(patient_id):
-        """환자 조회"""
-        return PatientCache.objects.filter(patient_id=patient_id).first()
+    def get_patient_by_id(patient_id, for_update=False):
+        """환자 조회 (for_update 옵션 추가)"""
+        queryset = PatientCache.objects.filter(patient_id=patient_id)
+        if for_update:
+            queryset = queryset.select_for_update()
+        return queryset.first()
+
+    @staticmethod
+    def update_patient_optimistic(patient_id, old_version, data):
+        """낙관적 락을 이용한 환자 정보 업데이트"""
+        from django.db.models import F
+        rows_updated = PatientCache.objects.filter(
+            patient_id=patient_id, 
+            version=old_version
+        ).update(**data, version=F('version') + 1)
+        return rows_updated > 0
 
     @staticmethod
     def get_last_patient_by_year(year):
@@ -204,9 +217,22 @@ class EncounterRepository:
         return Encounter.objects.create(**data)
 
     @staticmethod
-    def get_encounter_by_id(encounter_id):
-        """진료 기록 조회"""
-        return Encounter.objects.filter(encounter_id=encounter_id).first()
+    def get_encounter_by_id(encounter_id, for_update=False):
+        """진료 기록 조회 (for_update 옵션 추가)"""
+        queryset = Encounter.objects.filter(encounter_id=encounter_id)
+        if for_update:
+            queryset = queryset.select_for_update()
+        return queryset.first()
+
+    @staticmethod
+    def update_encounter_optimistic(encounter_id, old_version, data):
+        """낙관적 락을 이용한 진료 기록 업데이트"""
+        from django.db.models import F
+        rows_updated = Encounter.objects.filter(
+            encounter_id=encounter_id, 
+            version=old_version
+        ).update(**data, version=F('version') + 1)
+        return rows_updated > 0
 
     @staticmethod
     def get_max_encounter_sequence(year):
@@ -241,6 +267,24 @@ class OrderRepository:
                 OrderItem.objects.create(order=order, **item_datum)
 
             return order
+
+    @staticmethod
+    def get_order_by_id(order_id, for_update=False):
+        """처방 조회 (for_update 옵션 추가)"""
+        queryset = Order.objects.filter(order_id=order_id)
+        if for_update:
+            queryset = queryset.select_for_update()
+        return queryset.first()
+
+    @staticmethod
+    def update_order_optimistic(order_id, old_version, data):
+        """낙관적 락을 이용한 처방 업데이트"""
+        from django.db.models import F
+        rows_updated = Order.objects.filter(
+            order_id=order_id, 
+            version=old_version
+        ).update(**data, version=F('version') + 1)
+        return rows_updated > 0
 
     @staticmethod
     def get_max_order_sequence(year):

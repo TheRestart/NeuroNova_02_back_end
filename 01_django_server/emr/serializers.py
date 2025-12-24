@@ -5,8 +5,7 @@ Django REST Framework용 시리얼라이저
 """
 
 from rest_framework import serializers
-from .models import PatientCache, Encounter, Order, OrderItem
-from .models import PatientCache, Encounter, Order, OrderItem
+from .models import PatientCache, Encounter, EncounterDiagnosis, Order, OrderItem
 
 
 class PatientCacheSerializer(serializers.ModelSerializer):
@@ -36,16 +35,25 @@ class PatientCreateSerializer(serializers.ModelSerializer):
         ]
 
 
+
+class EncounterDiagnosisSerializer(serializers.ModelSerializer):
+    """진료 진단 시리얼라이저"""
+    class Meta:
+        model = EncounterDiagnosis
+        fields = ['diag_code', 'diagnosis_name', 'priority', 'created_at']
+
+
 class EncounterSerializer(serializers.ModelSerializer):
     """진료 기록 시리얼라이저"""
     patient_name = serializers.SerializerMethodField()
+    diagnoses = EncounterDiagnosisSerializer(many=True, read_only=True)
 
     class Meta:
         model = Encounter
         fields = [
             'encounter_id', 'patient', 'patient_name', 'doctor_id',
             'encounter_type', 'department', 'chief_complaint', 'diagnosis',
-            'status', 'encounter_date', 'created_at', 'updated_at'
+            'status', 'encounter_date', 'diagnoses', 'created_at', 'updated_at'
         ]
         read_only_fields = ['encounter_id', 'created_at', 'updated_at']
 
@@ -55,23 +63,29 @@ class EncounterSerializer(serializers.ModelSerializer):
 
 class EncounterCreateSerializer(serializers.ModelSerializer):
     """진료 기록 생성 시리얼라이저"""
+    diagnosis_codes = serializers.ListField(
+        child=serializers.CharField(),
+        write_only=True,
+        required=False
+    )
 
     class Meta:
         model = Encounter
         fields = [
             'patient', 'doctor_id', 'encounter_type', 'department',
-            'chief_complaint', 'diagnosis', 'status', 'encounter_date'
+            'chief_complaint', 'diagnosis', 'diagnosis_codes', 'status', 'encounter_date'
         ]
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
     """처방 항목 시리얼라이저"""
+    master_info = serializers.JSONField(read_only=True)
 
     class Meta:
         model = OrderItem
         fields = [
             'item_id', 'drug_code', 'drug_name', 'dosage',
-            'frequency', 'duration', 'route', 'instructions'
+            'frequency', 'duration', 'route', 'instructions', 'master_info'
         ]
         read_only_fields = ['item_id']
 

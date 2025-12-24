@@ -105,15 +105,22 @@ class PatientCacheViewSet(viewsets.ModelViewSet):
 
             # Then: 결과 처리
             if success:
-                # Case A: FHIR 서버 업데이트 성공 -> Django DB 업데이트
+                # Case A: FHIR 서버 업데이트 성공 -> Django DB 업데이트 (Service Layer 사용)
                 logger.info(f"FHIR update success for patient {patient.patient_id}")
-                self.perform_update(serializer)
-
-                # 동기화 시간 갱신
-                patient.last_synced_at = timezone.now()
-                patient.save(update_fields=['last_synced_at'])
-
-                return Response(serializer.data, status=status.HTTP_200_OK)
+                
+                # 낙관적 락을 위해 현재 버전 포함
+                update_data['version'] = patient.version
+                
+                try:
+                    updated_patient = PatientService.update_patient(patient.patient_id, update_data)
+                    # 시리얼라이저 데이터 갱신
+                    serializer = self.get_serializer(updated_patient)
+                    return Response(serializer.data, status=status.HTTP_200_OK)
+                except Exception as e:
+                    return Response(
+                        {"error": "Database update failed", "detail": str(e)},
+                        status=status.HTTP_409_CONFLICT
+                    )
 
             else:
                 # Case B: FHIR 서버 거절 (유효성 검사 실패 등)
@@ -248,24 +255,32 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def execute(self, request, pk=None):
-        """처방 실행"""
+        """처방 실행 (Service 레이어 및 Locking 적용)"""
         order = self.get_object()
         executed_by = request.data.get('executed_by')
+        current_version = request.data.get('version')  # 클라이언트가 보낸 버전
 
         if not executed_by:
             return Response(
                 {"error": "executed_by is required"},
                 status=status.HTTP_400_BAD_REQUEST
             )
+        
+        if current_version is None:
+             return Response(
+                {"error": "version is required for optimistic locking"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-        from django.utils import timezone
-        order.status = 'completed'
-        order.executed_at = timezone.now()
-        order.executed_by = executed_by
-        order.save()
-
-        serializer = self.get_serializer(order)
-        return Response(serializer.data)
+        try:
+            updated_order = OrderService.execute_order(order.order_id, executed_by, current_version)
+            serializer = self.get_serializer(updated_order)
+            return Response(serializer.data)
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_409_CONFLICT
+            )
 
 
 class OrderItemViewSet(viewsets.ModelViewSet):

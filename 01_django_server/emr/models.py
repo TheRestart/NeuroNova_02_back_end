@@ -71,9 +71,10 @@ class PatientCache(models.Model):
         help_text="OpenEMR과 마지막 동기화 시간"
     )
 
-    # 타임스탬프
+    # 타임스탬프 및 버전
     created_at = models.DateTimeField(auto_now_add=True, help_text="생성 시간")
     updated_at = models.DateTimeField(auto_now=True, help_text="수정 시간")
+    version = models.IntegerField(default=1, help_text="낙관적 락을 위한 버전 필드")
 
     class Meta:
         db_table = 'emr_patient_cache'
@@ -153,6 +154,7 @@ class Encounter(models.Model):
     encounter_date = models.DateTimeField(help_text="진료 일시")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    version = models.IntegerField(default=1, help_text="낙관적 락을 위한 버전 필드")
 
     class Meta:
         db_table = 'emr_encounters'
@@ -167,6 +169,42 @@ class Encounter(models.Model):
 
     def __str__(self):
         return f"{self.encounter_id} - {self.patient.full_name} ({self.encounter_date})"
+
+
+class EncounterDiagnosis(models.Model):
+    """
+    진료별 진단 내역 (DiagnosisMaster 연동)
+    """
+    encounter = models.ForeignKey(
+        Encounter,
+        on_delete=models.CASCADE,
+        related_name='diagnoses',
+        db_column='encounter_id',
+        help_text="진료 기록"
+    )
+    diag_code = models.CharField(max_length=20, help_text="질병 코드 (ICD-10/KCD)")
+    diagnosis_name = models.CharField(max_length=255, help_text="진단명 (한글/영문)")
+    priority = models.IntegerField(default=1, help_text="진단 우선순위 (1: 주진단, 2 이상: 부진단)")
+    version = models.IntegerField(default=1, help_text="낙관적 락을 위한 버전 필드")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'emr_encounter_diagnoses'
+        verbose_name = '진료 진단'
+        verbose_name_plural = '진료 진단 목록'
+        ordering = ['priority', 'created_at']
+
+    def __str__(self):
+        return f"[{self.diag_code}] {self.diagnosis_name}"
+
+    @property
+    def master_info(self):
+        """진단 마스터 데이터 조회 (OCS 연동)"""
+        from ocs.models import DiagnosisMaster
+        try:
+            return DiagnosisMaster.objects.get(diag_code=self.diag_code)
+        except (DiagnosisMaster.DoesNotExist, AttributeError):
+            return None
 
 
 class Order(models.Model):
@@ -241,6 +279,7 @@ class Order(models.Model):
 
     ordered_at = models.DateTimeField(auto_now_add=True, help_text="처방 시간")
     executed_at = models.DateTimeField(blank=True, null=True, help_text="실행 시간")
+    version = models.IntegerField(default=1, help_text="낙관적 락을 위한 버전 필드")
     executed_by = models.CharField(
         max_length=36,
         blank=True,
@@ -288,6 +327,7 @@ class OrderItem(models.Model):
     duration = models.CharField(max_length=20, help_text="기간 (예: 7일)")
     route = models.CharField(max_length=50, help_text="투여 경로 (예: 경구)")
     instructions = models.TextField(blank=True, null=True, help_text="복용 지시사항")
+    version = models.IntegerField(default=1, help_text="낙관적 락을 위한 버전 필드")
 
     class Meta:
         db_table = 'ocs_order_items'
@@ -296,3 +336,12 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f"{self.item_id} - {self.drug_name}"
+
+    @property
+    def master_info(self):
+        """약물 마스터 데이터 조회 (OCS 연동)"""
+        from ocs.models import MedicationMaster
+        try:
+            return MedicationMaster.objects.get(drug_code=self.drug_code)
+        except (MedicationMaster.DoesNotExist, AttributeError):
+            return None

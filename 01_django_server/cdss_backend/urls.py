@@ -24,4 +24,7 @@ urlpatterns = [
     path("api/emr/", include("emr.urls")),
     path("api/ris/", include("ris.urls")),
     path("api/ai/", include("ai.urls")),
+    path("api/ocs/", include("ocs.urls")),
+    path("api/lis/", include("lis.urls")),
+    path("api/audit/", include("audit.urls")),
 ]

@@ -40,7 +40,7 @@ CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:3000'
 # Application definition
 
 INSTALLED_APPS = [
-    "daphne",  # ASGI Server (Must be before django.contrib.staticfiles)
+    "daphne",  # ASGI Server
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -56,6 +56,9 @@ INSTALLED_APPS = [
     "emr",   # UC02 - EMR Proxy
     "ris",   # UC05 - Radiology Information System
     "ai",    # UC06 - AI Queue Integration
+    "ocs",   # UC03 - Order Communication System
+    "lis",   # UC04 - Lab Information System
+    "audit", # UC09 - Audit Logging
 ]
 
 MIDDLEWARE = [
@@ -67,7 +70,9 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "cdss_backend.middleware.IdempotencyMiddleware",  # 멱등성 보장
     "cdss_backend.middleware.ExceptionHandlerMiddleware",  # 전역 예외 처리
+    "audit.middleware.AuditMiddleware",  # 전수 감사 로깅
 ]
 
 ROOT_URLCONF = "cdss_backend.urls"
@@ -115,7 +120,7 @@ DATABASES = {
         'PORT': os.getenv('DB_PORT', '3306'),
         'OPTIONS': {
             'charset': 'utf8mb4',
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'; SET TRANSACTION ISOLATION LEVEL READ COMMITTED;",
         },
     },
     'openemr': {

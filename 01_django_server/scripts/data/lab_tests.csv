@@ -1,0 +1,4 @@
+test_code,test_name,sample_type,method,unit,reference_range
+L1001,Hemoglobin,Blood,Automated,g/dL,12.0-16.0
+L1002,Glucose (Fasting),Blood,Hexokinase,mg/dL,70-99
+L1003,Creatinine,Serum,Jaffe,mg/dL,0.7-1.3

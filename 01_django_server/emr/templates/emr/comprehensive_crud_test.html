@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CDSS 종합 CRUD 테스트 센터</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4e73df;
+            --secondary-color: #858796;
+            --success-color: #1cc88a;
+            --info-color: #36b9cc;
+            --warning-color: #f6c23e;
+            --danger-color: #e74a3b;
+            --dark-bg: #1a1c2e;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f4f6f9;
+        }
+
+        .sidebar {
+            min-height: 100vh;
+            background: var(--dark-bg);
+            color: white;
+            padding-top: 20px;
+        }
+
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, .8);
+            margin: 5px 15px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background: rgba(255, 255, 255, .1);
+            color: white;
+        }
+
+        .main-content {
+            padding: 30px;
+        }
+
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, .04);
+            margin-bottom: 25px;
+        }
+
+        .card-header {
+            background-color: white;
+            border-bottom: 1px solid #edf2f9;
+            font-weight: 700;
+            padding: 15px 20px;
+        }
+
+        .result-panel {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Fira Code', 'Consolas', monospace;
+            font-size: 0.85rem;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            border: 1px solid #333;
+        }
+
+        .audit-badge {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+        }
+
+        .master-search-btn {
+            background: #f8f9fc;
+            border: 1px dashed #d1d3e2;
+            color: #858796;
+            width: 100%;
+            text-align: left;
+            padding: 8px 12px;
+            border-radius: 6px;
+        }
+
+        .master-search-btn:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav class="col-md-2 d-none d-md-block sidebar">
+                <div class="px-4 mb-4">
+                    <h5 class="fw-bold"><i class="fas fa-microscope me-2"></i>CDSS Lab</h5>
+                    <span class="badge bg-success">v5.0 Ready</span>
+                </div>
+                <ul class="nav flex-column">
+                    <li class="nav-item"><a href="#patient-sec" class="nav-link active"><i
+                                class="fas fa-user-injured me-2"></i>환자 관리</a></li>
+                    <li class="nav-item"><a href="#encounter-sec" class="nav-link"><i
+                                class="fas fa-notes-medical me-2"></i>진료 기록</a></li>
+                    <li class="nav-item"><a href="#order-sec" class="nav-link"><i
+                                class="fas fa-prescription me-2"></i>OCS 처방</a></li>
+                    <li class="nav-item"><a href="#lab-sec" class="nav-link"><i class="fas fa-vial me-2"></i>LIS 결과</a>
+                    </li>
+                    <li class="nav-item"><a href="#audit-sec" class="nav-link"><i class="fas fa-history me-2"></i>감사
+                            로그</a></li>
+                </ul>
+            </nav>
+
+            <!-- Main Content -->
+            <main class="col-md-10 ms-sm-auto main-content">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="fw-bold">종합 CRUD 테스트 및 저장 검증</h2>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-secondary btn-sm" onclick="clearResults()"><i
+                                class="fas fa-eraser me-1"></i>결과 지우기</button>
+                        <button class="btn btn-primary btn-sm" onclick="location.reload()"><i
+                                class="fas fa-sync me-1"></i>새로고침</button>
+                    </div>
+                </div>
+
+                <!-- Global Response Panel -->
+                <div class="card mb-4 bg-dark">
+                    <div class="card-header bg-dark text-white border-secondary d-flex justify-content-between">
+                        <span><i class="fas fa-terminal me-2"></i>API Response Console</span>
+                        <small id="last-status" class="text-secondary"></small>
+                    </div>
+                    <div id="global-console" class="result-panel">Waiting for operations...</div>
+                </div>
+
+                <div class="row">
+                    <!-- Left Column: Operations -->
+                    <div class="col-lg-7">
+
+                        <!-- Patient Section -->
+                        <section id="patient-sec" class="mb-5">
+                            <div class="card">
+                                <div class="card-header text-primary"><i class="fas fa-user-plus me-2"></i>UC02: 환자 신규
+                                    등록 (dual-DB Write)</div>
+                                <div class="card-body">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold">성</label>
+                                            <input type="text" id="p-fname" class="form-control" value="테스트">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold">이름</label>
+                                            <input type="text" id="p-gname" class="form-control" value="환자">
+                                        </div>
+                                        <div class="col-12 mt-3">
+                                            <div class="d-flex gap-2">
+                                                <button class="btn btn-primary w-100"
+                                                    onclick="apiCall('POST', '/api/emr/patients/', getPatientData())">환자
+                                                    등록 실행</button>
+                                                <button class="btn btn-light"
+                                                    onclick="apiCall('GET', '/api/emr/patients/')"><i
+                                                        class="fas fa-list"></i></button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Encounter Section -->
+                        <section id="encounter-sec" class="mb-5">
+                            <div class="card border-info">
+                                <div class="card-header text-info"><i class="fas fa-file-medical me-2"></i>UC02: 진료 및 진단
+                                    등록 (Master Data Mapping)</div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold">환자 ID</label>
+                                        <input type="text" id="e-pid" class="form-control form-control-sm"
+                                            placeholder="P-2025-XXXXXX">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold">진단 코드 (DiagnosisMaster에서 검색)</label>
+                                        <div class="input-group">
+                                            <input type="text" id="e-diag-code" class="form-control" placeholder="J00">
+                                            <button class="btn btn-outline-info"
+                                                onclick="searchMaster('diagnoses', 'e-diag-code')"><i
+                                                    class="fas fa-search"></i></button>
+                                        </div>
+                                        <small class="text-muted">예: J00 (급성 비인두염), I10 (본태성 고혈압)</small>
+                                    </div>
+                                    <button class="btn btn-info text-white w-100"
+                                        onclick="apiCall('POST', '/api/emr/encounters/', getEncounterData())">진료 및 구조화된
+                                        진단 저장</button>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Order Section -->
+                        <section id="order-sec" class="mb-5">
+                            <div class="card border-success">
+                                <div class="card-header text-success"><i class="fas fa-pills me-2"></i>UC03: OCS 처방 발행
+                                    (Medication Validation)</div>
+                                <div class="card-body">
+                                    <div class="mb-2">
+                                        <label class="form-label small fw-bold">진료(Encounter) ID</label>
+                                        <input type="text" id="o-eid" class="form-control form-control-sm"
+                                            placeholder="E-2025-XXXXXX">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold">약품 코드</label>
+                                        <div class="input-group">
+                                            <input type="text" id="o-drug-code" class="form-control" placeholder="D001">
+                                            <button class="btn btn-outline-success"
+                                                onclick="searchMaster('medications', 'o-drug-code')"><i
+                                                    class="fas fa-search"></i></button>
+                                        </div>
+                                        <small class="text-muted">예: D001 (Tylenol), D003 (Amoxicillin)</small>
+                                    </div>
+                                    <button class="btn btn-success w-100"
+                                        onclick="apiCall('POST', '/api/emr/orders/', getOrderData())">약물 처방 저장</button>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Lab Section -->
+                        <section id="lab-sec" class="mb-5">
+                            <div class="card border-warning">
+                                <div class="card-header text-warning"><i class="fas fa-microscope me-2"></i>UC04: LIS 결과
+                                    등록 (Abnormal Logic & Alert)</div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold">처방(Order) ID</label>
+                                        <input type="text" id="l-oid" class="form-control form-control-sm">
+                                    </div>
+                                    <div class="row g-2 mb-3">
+                                        <div class="col-8">
+                                            <label class="form-label small fw-bold">검사 항목</label>
+                                            <div class="input-group">
+                                                <input type="text" id="l-test-code" class="form-control"
+                                                    placeholder="L001">
+                                                <button class="btn btn-outline-warning"
+                                                    onclick="searchMaster('tests', 'l-test-code')"><i
+                                                        class="fas fa-search"></i></button>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <label class="form-label small fw-bold">수치</label>
+                                            <input type="text" id="l-value" class="form-control" placeholder="150">
+                                        </div>
+                                    </div>
+                                    <button class="btn btn-warning w-100 fw-bold"
+                                        onclick="apiCall('POST', '/api/lis/results/', getLabData())">결과 등록 및 이상치 알림
+                                        테스트</button>
+                                </div>
+                            </div>
+                        </section>
+
+                    </div>
+
+                    <!-- Right Column: Audit & Real-time Info -->
+                    <div class="col-lg-5">
+
+                        <!-- Audit Section -->
+                        <section id="audit-sec" class="sticky-top" style="top: 30px;">
+                            <div class="card">
+                                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                    <span><i class="fas fa-shield-alt me-2"></i>UC09: 로우 데이터 감사 로그</span>
+                                    <button class="btn btn-link btn-sm p-0" onclick="loadAuditLogs()"><i
+                                            class="fas fa-sync-alt"></i></button>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div id="audit-logs" style="height: 600px; overflow-y: auto;">
+                                        <div class="p-4 text-center text-muted">로그를 불러오는 중...</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal: Master Data Search -->
+    <div class="modal fade" id="masterModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">마스터 데이터 검색</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="input-group mb-3">
+                        <input type="text" id="master-search-input" class="form-control" placeholder="검색어 입력...">
+                        <button class="btn btn-primary" id="master-search-btn">검색</button>
+                    </div>
+                    <div id="master-result-list" class="list-group list-group-flush border"
+                        style="max-height: 400px; overflow-y: auto;">
+                        <!-- Results here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const consoleEl = document.getElementById('global-console');
+        const statusEl = document.getElementById('last-status');
+        const auditEl = document.getElementById('audit-logs');
+        const masterModal = new bootstrap.Modal(document.getElementById('masterModal'));
+
+        // --- Core API Caller ---
+        async function apiCall(method, url, data = null) {
+            consoleEl.innerHTML = "Processing...";
+            statusEl.innerText = "";
+
+            const options = {
+                method: method,
+                headers: { 'Content-Type': 'application/json' }
+            };
+            if (data) options.body = JSON.stringify(data);
+
+            try {
+                const start = Date.now();
+                const response = await fetch(url, options);
+                const duration = Date.now() - start;
+
+                const result = response.status !== 204 ? await response.json() : { "message": "Deleted successfully" };
+
+                consoleEl.innerHTML = JSON.stringify(result, null, 2);
+                statusEl.innerText = `${method} ${url} | ${response.status} | ${duration}ms`;
+
+                // Auto-propagate IDs
+                if (response.ok) {
+                    if (result.patient_id) document.getElementById('e-pid').value = result.patient_id;
+                    if (result.encounter_id) document.getElementById('o-eid').value = result.encounter_id;
+                    if (result.order_id) document.getElementById('l-oid').value = result.order_id;
+
+                    // Refresh audit logs after a short delay
+                    setTimeout(loadAuditLogs, 500);
+                }
+            } catch (err) {
+                consoleEl.innerHTML = `ERROR: ${err.message}`;
+            }
+        }
+
+        function clearResults() {
+            consoleEl.innerHTML = "Console cleared.";
+            statusEl.innerText = "";
+        }
+
+        // --- Data Extractors ---
+        function getPatientData() {
+            return {
+                family_name: document.getElementById('p-fname').value,
+                given_name: document.getElementById('p-gname').value,
+                birth_date: '1985-05-20',
+                gender: 'male',
+                phone: '010-1234-5678',
+                email: `patient_${Date.now()}@example.com`,
+                address: 'Seoul, Korea'
+            };
+        }
+
+        function getEncounterData() {
+            return {
+                patient: document.getElementById('e-pid').value,
+                doctor_id: "test-doc-001",
+                encounter_type: "outpatient",
+                department: "내과",
+                encounter_date: new Date().toISOString(),
+                diagnosis_codes: [document.getElementById('e-diag-code').value]
+            };
+        }
+
+        function getOrderData() {
+            return {
+                patient: document.getElementById('e-pid').value,
+                encounter: document.getElementById('o-eid').value,
+                ordered_by: "test-doc-001",
+                order_type: "medication",
+                order_items: [{
+                    drug_code: document.getElementById('o-drug-code').value,
+                    drug_name: "Auto-Filled Name",
+                    dosage: "1정",
+                    frequency: "1일 3회",
+                    duration: "3일",
+                    route: "경구"
+                }]
+            };
+        }
+
+        function getLabData() {
+            return {
+                order: document.getElementById('l-oid').value,
+                patient: document.getElementById('e-pid').value,
+                test_master: document.getElementById('l-test-code').value,
+                result_value: document.getElementById('l-value').value,
+                result_unit: "mg/dL",
+                reported_by: "tech-001"
+            };
+        }
+
+        // --- Audit Log Loader ---
+        async function loadAuditLogs() {
+            try {
+                const response = await fetch('/api/audit/logs/');
+                const result = await response.json();
+                const logs = result.results || result;
+
+                auditEl.innerHTML = logs.map(log => `
+                <div class="px-4 py-3 border-bottom">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="badge ${getActionClass(log.action)} audit-badge">${log.action_display}</span>
+                        <small class="text-muted" style="font-size: 0.75rem;">${new Date(log.created_at).toLocaleTimeString()}</small>
+                    </div>
+                    <div class="small fw-bold text-dark">${log.app_label}.${log.model_name} <span class="text-secondary fw-normal">#${log.object_id || 'Global'}</span></div>
+                    <div class="small text-secondary text-truncate" style="font-size: 0.75rem;">Path: ${log.path}</div>
+                    <div class="small text-info" style="font-size: 0.75rem;">User: ${log.user_name || 'System'} (${log.ip_address})</div>
+                </div>
+            `).join('') || '<div class="p-4 text-center">로그가 없습니다.</div>';
+            } catch (e) {
+                auditEl.innerHTML = '<div class="p-4 text-danger">로그 로드 실패</div>';
+            }
+        }
+
+        function getActionClass(action) {
+            switch (action) {
+                case 'CREATE': return 'bg-success';
+                case 'UPDATE': return 'bg-primary';
+                case 'DELETE': return 'bg-danger';
+                default: return 'bg-secondary';
+            }
+        }
+
+        // --- Master Data Search ---
+        let currentTargetInputId = '';
+        let currentType = '';
+
+        function searchMaster(type, targetId) {
+            currentType = type;
+            currentTargetInputId = targetId;
+            const typeLabels = { 'medications': '약물 마스터', 'diagnoses': '진단 마스터', 'tests': '검사 마스터' };
+            document.getElementById('modalTitle').innerText = typeLabels[type] + " 검색";
+            document.getElementById('master-result-list').innerHTML = '<div class="p-3 text-center">검색어를 입력하고 검색 버튼을 누르세요.</div>';
+            masterModal.show();
+        }
+
+        document.getElementById('master-search-btn').onclick = async () => {
+            const query = document.getElementById('master-search-input').value;
+            const listEl = document.getElementById('master-result-list');
+            listEl.innerHTML = '<div class="p-3 text-center">검색 중...</div>';
+
+            try {
+                const endpoint = `/api/${currentType === 'tests' ? 'lis' : 'ocs'}/${currentType}/?search=${query}`;
+                const response = await fetch(endpoint);
+                const result = await response.json();
+                const items = result.results || result;
+
+                if (items.length === 0) {
+                    listEl.innerHTML = '<div class="p-3 text-center">검색 결과가 없습니다.</div>';
+                    return;
+                }
+
+                listEl.innerHTML = items.map(item => {
+                    const code = item.drug_code || item.diag_code || item.test_code;
+                    const name = item.drug_name || item.name_ko || item.test_name;
+                    const sub = item.manufacturer || item.category || item.reference_range || '';
+
+                    return `
+                    <button class="list-group-item list-group-item-action py-3 px-4" onclick="selectCode('${code}')">
+                        <div class="d-flex justify-content-between">
+                            <span class="fw-bold text-primary">${code}</span>
+                            <small class="text-muted">${sub}</small>
+                        </div>
+                        <div class="small mt-1">${name}</div>
+                    </button>
+                `;
+                }).join('');
+            } catch (e) {
+                listEl.innerHTML = '<div class="p-3 text-danger">검색 실패: ' + e.message + '</div>';
+            }
+        };
+
+        function selectCode(code) {
+            document.getElementById(currentTargetInputId).value = code;
+            masterModal.hide();
+        }
+
+        // Initial Load
+        loadAuditLogs();
+    </script>
+
+</body>
+
+</html>

@@ -137,3 +137,77 @@ class ExceptionHandlerMiddleware:
             response_data['traceback'] = error_traceback
         
         return JsonResponse(response_data, status=500)
+
+
+class IdempotencyMiddleware:
+    """
+    중복 요청 방지를 위한 멱등성 미들웨어
+    - X-Idempotency-Key 헤더가 있는 경우 작동
+    - POST, PUT, PATCH, DELETE 요청에만 적용
+    - 캐시를 사용하여 기존 응답을 저장하고 재활용
+    """
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        # 1. 멱등성 검사 대상 메서드인지 확인
+        if request.method not in ['POST', 'PUT', 'PATCH', 'DELETE']:
+            return self.get_response(request)
+
+        # 2. 멱등성 키 헤더 추출
+        idempotency_key = request.headers.get('X-Idempotency-Key')
+        if not idempotency_key:
+            return self.get_response(request)
+
+        # 3. 캐시 로드
+        from django.core.cache import cache
+        import hashlib
+        
+        # 키 생성 (사용자 ID + 키 + 경로)
+        user_id = getattr(request.user, 'user_id', 'anonymous')
+        cache_key = f"idempotency_{hashlib.md5(f'{user_id}:{idempotency_key}:{request.path}'.encode()).hexdigest()}"
+
+        # 4. 이미 처리 중이거나 처리된 결과가 있는지 확인 (Locking/Caching)
+        cached_response = cache.get(cache_key)
+        if cached_response:
+            if cached_response == 'PROCESSING':
+                return JsonResponse(
+                    {"error": "Request is already being processed"},
+                    status=status.HTTP_409_CONFLICT
+                )
+            
+            # 캐시된 응답 반환
+            logger.info(f"Returning idempotent response for key: {idempotency_key}")
+            return JsonResponse(
+                cached_response['data'],
+                status=cached_response['status']
+            )
+
+        # 5. 처리 중임을 표시 (2분간 유효)
+        cache.set(cache_key, 'PROCESSING', timeout=120)
+
+        # 6. 실제 로직 실행
+        try:
+            response = self.get_response(request)
+            
+            # 7. 성공적인 응답(2xx)은 캐싱 (5분간 유효)
+            if 200 <= response.status_code < 300:
+                # JsonResponse인 경우에만 데이터 추출 가능
+                if isinstance(response, JsonResponse):
+                    import json
+                    response_data = json.loads(response.content)
+                    cache.set(cache_key, {
+                        'data': response_data,
+                        'status': response.status_code
+                    }, timeout=300)
+            else:
+                # 에러 발생 시에는 캐시 삭제 (재시도 가능하게)
+                cache.delete(cache_key)
+                
+            return response
+
+        except Exception as e:
+            # 예외 발생 시 캐시 삭제
+            cache.delete(cache_key)
+            raise e
